@@ -4,19 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trung | AI Developer Portfolio</title>
+    <meta name="description" content="AI Developer specializing in Deep Learning, Computer Vision, and Immersive Web Experiences." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./style.css" />
+
+    <!-- Import Map: resolve bare specifiers to CDN -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+        "three/examples/jsm/loaders/GLTFLoader.js": "https://unpkg.com/three@0.160.1/examples/jsm/loaders/GLTFLoader.js",
+        "gsap": "https://esm.sh/gsap@3.12.5",
+        "gsap/ScrollTrigger": "https://esm.sh/gsap@3.12.5/ScrollTrigger"
+      }
+    }
+    </script>
   </head>
   <body>
     <!-- Premium Loader -->
     <div id="loader">
-      <h2 class="gradient-text" style="font-size: 1.5rem;">INITIALIZING UNIVERSE...</h2>
+      <h2 class="gradient-text" style="font-size: 1.5rem;">LOADING...</h2>
     </div>
 
     <!-- Navigation Bar -->
-    <nav>
+    <nav id="navbar">
       <div class="logo">TRUNG<span class="gradient-text">.</span></div>
       <ul class="nav-links">
         <li><a href="#home" class="nav-link active">Home</a></li>
@@ -26,52 +39,64 @@
       </ul>
     </nav>
 
-    <!-- Canvas Background -->
+    <!-- Canvas Background (Robot renders here) -->
     <canvas id="bg"></canvas>
 
     <!-- Main Content Overlays -->
     <main>
-      <section id="home" class="visible">
-        <h1>Hi, I'm <span class="gradient-text">Trung</span></h1>
-        <p>AI Developer specializing in Deep Learning, Computer Vision, and Immersive Web Experiences.</p>
-        
+      <!-- HERO — text left, robot right (robot via 3D canvas) -->
+      <section id="home" class="visible hero-section">
+        <div class="hero-content">
+          <p class="hero-tag">AI DEVELOPER</p>
+          <h1>Hi, I'm <span class="gradient-text">Trung</span></h1>
+          <p>Specializing in Deep Learning, Computer Vision, and Immersive Web Experiences.</p>
+        </div>
+
         <div class="scroll-indicator">
-          <div class="mouse">
-            <div class="wheel"></div>
-          </div>
-          <p style="font-size: 0.75rem; margin-top: 10px; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase;">Scroll to Drive</p>
+          <div class="mouse"><div class="wheel"></div></div>
+          <p class="scroll-label">Scroll to Explore</p>
         </div>
       </section>
 
       <section id="projects">
         <h1><span class="gradient-text">SELECTED WORKS</span></h1>
-        <div style="display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap;">
-          <div style="padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); flex: 1; min-width: 280px;">
-            <h3 style="margin-bottom: 15px; color: #fff;">Leaf Disease Dataset</h3>
-            <p style="font-size: 0.95rem;">High-quality agricultural dataset for precision AI training.</p>
+        <div class="project-grid">
+          <div class="glass-card">
+            <h3>Leaf Disease Dataset</h3>
+            <p>High-quality agricultural dataset for precision AI training.</p>
           </div>
-          <div style="padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); flex: 1; min-width: 280px;">
-            <h3 style="margin-bottom: 15px; color: #fff;">Predictive Analytics</h3>
-            <p style="font-size: 0.95rem;">Real-time AI modeling for optimized system performance.</p>
+          <div class="glass-card">
+            <h3>Predictive Analytics</h3>
+            <p>Real-time AI modeling for optimized system performance.</p>
           </div>
-          <div style="padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); backdrop-filter: blur(12px); flex: 1; min-width: 280px;">
-            <h3 style="margin-bottom: 15px; color: #fff;">Flutter Smart IoT</h3>
-            <p style="font-size: 0.95rem;">A premium mobile interface for intelligent hardware control.</p>
+          <div class="glass-card">
+            <h3>Flutter Smart IoT</h3>
+            <p>A premium mobile interface for intelligent hardware control.</p>
           </div>
         </div>
       </section>
 
       <section id="skills">
         <h1><span class="gradient-text">CORE EXPERTISE</span></h1>
-        <p>Expertise in Computer Vision, Deep Learning (PyTorch/TensorFlow), Flutter, and Professional 3D Visualization using Three.js.</p>
+        <div class="skills-list">
+          <div class="skill-chip">Python</div>
+          <div class="skill-chip">PyTorch</div>
+          <div class="skill-chip">TensorFlow</div>
+          <div class="skill-chip">Computer Vision</div>
+          <div class="skill-chip">Flutter</div>
+          <div class="skill-chip">Three.js</div>
+          <div class="skill-chip">IoT / ESP32</div>
+          <div class="skill-chip">React</div>
+        </div>
       </section>
 
       <section id="contact">
-        <h1>LET'S <br/><span class="gradient-text">DRIVE INNOVATION</span></h1>
+        <h1>LET'S <br/><span class="gradient-text">BUILD TOGETHER</span></h1>
         <p>Seeking impactful roles in AI development and innovative software architecture.</p>
+        <a href="mailto:trung@example.com" class="cta-btn">Get in Touch</a>
       </section>
     </main>
 
-    <script type="module" src="/main.js"></script>
+    <script type="module" src="./main.js"></script>
   </body>
 </html>

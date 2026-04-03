@@ -1,55 +1,46 @@
-// main.js - Entry Point
-import { SceneManager } from './src/core/engine.js'; 
-import { Car } from './src/objects/car.js';
-import { AnimationManager } from './src/animation/scroll.js';
-import { UIManager } from './src/ui/navbar.js';
+import { SceneManager } from './js/core/engine.js';
+import { Robot } from './js/objects/robot.js';
+import { ScrollManager } from './js/animation/scroll.js';
+import { UIManager } from './js/ui/navbar.js';
+import * as THREE from 'three';
 
 /**
- * ========================================
- * 3D PORTFOLIO ORCHESTRATOR
- * ========================================
+ * ROBOT PORTFOLIO — Entry Point (Static / GitHub Pages Ready)
  */
-
 const canvas = document.querySelector('#bg');
 const sceneManager = new SceneManager(canvas);
+const clock = new THREE.Clock();
 
-// Load the Highly-Detailed Bugatti Model
-const GLB_URL = './bugatti_veyron__racing_car_-_unityunreal.glb';
+const robot = new Robot(sceneManager.scene);
 
-sceneManager.loadModel(Car, GLB_URL, (car) => {
-    console.log('Bugatti model loaded successfully.');
-    
-    // Enable Bloom (Glow) for the signature look - Step 5
-    sceneManager.renderer.toggleBloom(true);
-    
-    // Initialize Animation & UI Layers after model is ready
-    const animationManager = new AnimationManager(sceneManager);
-    const uiManager = new UIManager();
+robot.load('./assets/robot_animated.glb', () => {
+  console.log('Robot model loaded.');
 
-    // Handle Window Resize
-    window.addEventListener('resize', () => sceneManager.onResize());
+  const scrollManager = new ScrollManager(robot);
+  const ui = new UIManager();
 
-    // Main Animation Loop
-    function tick() {
-        const dt = 0.016; 
-        
-        // Update modules
-        animationManager.update(dt);
-        sceneManager.cameraCtrl.update(dt);
-        
-        // Render current state
-        sceneManager.render();
-        
-        requestAnimationFrame(tick);
-    }
-    
-    // Kickstart the experience
-    tick();
+  window.addEventListener('resize', () => sceneManager.onResize());
 
-    // Fade out initial static loader state if any
-    const loader = document.querySelector('#loader');
-    if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 1000);
-    }
+  function tick() {
+    const dt = clock.getDelta();
+    const elapsed = clock.elapsedTime;
+
+    robot.update(dt, elapsed);
+
+    const rp = robot.group.position;
+    sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);
+    sceneManager.cameraCtrl.setLookAt(rp.x * 0.25, 0.3, rp.z);
+    sceneManager.cameraCtrl.update(dt);
+
+    sceneManager.render();
+    requestAnimationFrame(tick);
+  }
+
+  tick();
+
+  const loader = document.querySelector('#loader');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.remove(), 1000);
+  }
 });
