@@ -1,6 +1,6 @@
 <div align="center">
   
-# 🤖 trung-portfolio — Interactive 3D Experience
+# Portfolio Website
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://tranvantrung27.github.io/trung-portfolio/)
 [![Three.js](https://img.shields.io/badge/Three.js-r160-black?logo=three.js)](https://threejs.org/)
