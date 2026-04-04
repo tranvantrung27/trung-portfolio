@@ -4,7 +4,7 @@
 export const config = {
   camera: {
     fov: 45,
-    near: 0.1,
+    near: 0.01,
     far: 100,
     startPos: [0.5, 1.0, 7],
     damping: 3,
@@ -13,10 +13,10 @@ export const config = {
   robot: {
     scale: 0.9,
     states: {
-      home:     { pos: [2.0, -1.0, 0],   rotY: -0.3 },
-      projects: { pos: [2.5, -1.0, 0],   rotY: -0.5 },
-      skills:   { pos: [2.5, -1.0, 0.5], rotY: 0.3 },
-      contact:  { pos: [0.5, -1.0, 0],   rotY: Math.PI },
+      home:     { pos: [2.0, -1.0, 0],    rotY: -0.3 },
+      projects: { pos: [4.5, -1.0, -3.5], rotY: -0.5 },
+      skills:   { pos: [4.5, -1.0, -3.0], rotY: 0.3 },
+      contact:  { pos: [1.5, -1.0, -1],   rotY: Math.PI },
     },
     floatAmplitude: 0.06,
     floatSpeed: 1.5,

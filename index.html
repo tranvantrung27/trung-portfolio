@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trung | AI Developer Portfolio</title>
-    <meta name="description" content="AI Developer specializing in Deep Learning, Computer Vision, and Immersive Web Experiences." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./style.css" />
+<html lang="vi">
 
-    <!-- Import Map: resolve bare specifiers to CDN -->
-    <script type="importmap">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trung | AI Developer Portfolio</title>
+  <meta name="description"
+    content="AI Developer chuyên về Deep Learning, Computer Vision và phát triển ứng dụng thông minh." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Import Map: resolve bare specifiers to CDN -->
+  <script type="importmap">
     {
       "imports": {
         "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
@@ -21,82 +23,88 @@
       }
     }
     </script>
-  </head>
-  <body>
-    <!-- Premium Loader -->
-    <div id="loader">
-      <h2 class="gradient-text" style="font-size: 1.5rem;">LOADING...</h2>
+</head>
+
+<body>
+  <!-- Premium Loader -->
+  <div id="loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <p class="gradient-text loader-text">LOADING</p>
     </div>
+  </div>
 
-    <!-- Navigation Bar -->
-    <nav id="navbar">
-      <div class="logo">TRUNG<span class="gradient-text">.</span></div>
-      <ul class="nav-links">
-        <li><a href="#home" class="nav-link active">Home</a></li>
-        <li><a href="#projects" class="nav-link">Projects</a></li>
-        <li><a href="#skills" class="nav-link">Skills</a></li>
-        <li><a href="#contact" class="nav-link">Contact</a></li>
-      </ul>
-    </nav>
+  <!-- Navigation Bar -->
+  <nav id="navbar">
+    <div class="logo">TRUNG<span class="gradient-text">.</span></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home" class="nav-link active">Home</a></li>
+      <li><a href="#projects" class="nav-link">Projects</a></li>
+      <li><a href="#skills" class="nav-link">Skills</a></li>
+      <li><a href="#contact" class="nav-link">Contact</a></li>
+    </ul>
+  </nav>
 
-    <!-- Canvas Background (Robot renders here) -->
-    <canvas id="bg"></canvas>
+  <!-- Canvas Background (Robot renders here) -->
+  <canvas id="bg"></canvas>
 
-    <!-- Main Content Overlays -->
-    <main>
-      <!-- HERO — text left, robot right (robot via 3D canvas) -->
-      <section id="home" class="visible hero-section">
-        <div class="hero-content">
-          <p class="hero-tag">AI DEVELOPER</p>
-          <h1>Hi, I'm <span class="gradient-text">Trung</span></h1>
-          <p>Specializing in Deep Learning, Computer Vision, and Immersive Web Experiences.</p>
+  <!-- Main Content Overlays -->
+  <main>
+    <!-- HERO -->
+    <section id="home" class="visible hero-section">
+      <div class="hero-content">
+        <p class="hero-tag">AI DEVELOPER</p>
+        <h1>Hi, I'm <span class="gradient-text">Trung</span></h1>
+        <p class="hero-subtitle">Chuyên về Deep Learning, Computer Vision và phát triển ứng dụng.</p>
+      </div>
+
+      <div class="scroll-indicator">
+        <div class="mouse">
+          <div class="wheel"></div>
         </div>
+        <p class="scroll-label">Scroll to Explore</p>
+      </div>
+    </section>
 
-        <div class="scroll-indicator">
-          <div class="mouse"><div class="wheel"></div></div>
-          <p class="scroll-label">Scroll to Explore</p>
-        </div>
-      </section>
+    <!-- PROJECTS — rendered by renderer.js -->
+    <section id="projects">
+      <h2><span class="gradient-text">SELECTED WORKS</span></h2>
+      <div class="project-grid">
+        <!-- Populated from content.js -->
+      </div>
+    </section>
 
-      <section id="projects">
-        <h1><span class="gradient-text">SELECTED WORKS</span></h1>
-        <div class="project-grid">
-          <div class="glass-card">
-            <h3>Leaf Disease Dataset</h3>
-            <p>High-quality agricultural dataset for precision AI training.</p>
-          </div>
-          <div class="glass-card">
-            <h3>Predictive Analytics</h3>
-            <p>Real-time AI modeling for optimized system performance.</p>
-          </div>
-          <div class="glass-card">
-            <h3>Flutter Smart IoT</h3>
-            <p>A premium mobile interface for intelligent hardware control.</p>
-          </div>
-        </div>
-      </section>
+    <!-- SKILLS — rendered by renderer.js -->
+    <section id="skills">
+      <h2><span class="gradient-text">CORE EXPERTISE</span></h2>
+      <div class="skills-container">
+        <!-- Populated from content.js -->
+      </div>
+    </section>
 
-      <section id="skills">
-        <h1><span class="gradient-text">CORE EXPERTISE</span></h1>
-        <div class="skills-list">
-          <div class="skill-chip">Python</div>
-          <div class="skill-chip">PyTorch</div>
-          <div class="skill-chip">TensorFlow</div>
-          <div class="skill-chip">Computer Vision</div>
-          <div class="skill-chip">Flutter</div>
-          <div class="skill-chip">Three.js</div>
-          <div class="skill-chip">IoT / ESP32</div>
-          <div class="skill-chip">React</div>
-        </div>
-      </section>
+    <!-- CONTACT -->
+    <section id="contact">
+      <h2>LET'S <br /><span class="gradient-text">BUILD TOGETHER</span></h2>
+      <p class="contact-subtitle"></p>
+      <a href="#" class="cta-btn"></a>
+    </section>
+  </main>
 
-      <section id="contact">
-        <h1>LET'S <br/><span class="gradient-text">BUILD TOGETHER</span></h1>
-        <p>Seeking impactful roles in AI development and innovative software architecture.</p>
-        <a href="mailto:trung@example.com" class="cta-btn">Get in Touch</a>
-      </section>
-    </main>
+  <!-- Footer — rendered by renderer.js -->
+  <footer id="footer">
+    <div class="footer-content">
+      <div class="footer-brand">TRUNG<span class="gradient-text">.</span></div>
+      <div class="footer-links">
+        <!-- Populated from content.js -->
+      </div>
+      <p class="footer-copy"></p>
+    </div>
+  </footer>
 
-    <script type="module" src="./main.js"></script>
-  </body>
+  <script type="module" src="./main.js"></script>
+</body>
+
 </html>
