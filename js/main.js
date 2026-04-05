@@ -8,6 +8,7 @@ import { ScrollManager } from './managers/ScrollManager.js';
 import { UIManager } from './ui/Navbar.js';
 import { renderContent } from './ui/ContentRenderer.js';
 import * as THREE from 'three';
+import { RobotChat } from './ui/RobotChat.js';
 
 /**
  * ROBOT PORTFOLIO — Entry Point
@@ -144,7 +145,7 @@ document.getElementById('arcade-close')?.addEventListener('click', () => {
   const rp = robot.group.position;
   const homeTarget = { x: rp.x * 0.12 + 0.3, y: 0.9, z: 7 };
   const homeLookAt = { x: rp.x * 0.25, y: 0.3, z: rp.z };
-  
+
   arcade.closeArcade(sceneManager.cameraCtrl, homeTarget, homeLookAt, () => {
     arcadeIsOpen = false;
   });
@@ -157,6 +158,9 @@ robot.load(MODELS.CHARACTERS.ROBOT, () => {
 
   const ui = new UIManager();
   window.addEventListener('resize', () => sceneManager.onResize());
+
+  // Initialize modular Chat UI mapped to 3D Robot
+  const robotChat = new RobotChat(robot);
 
   function tick() {
     const dt = clock.getDelta();
@@ -175,6 +179,10 @@ robot.load(MODELS.CHARACTERS.ROBOT, () => {
       sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);
       sceneManager.cameraCtrl.setLookAt(rp.x * 0.25, 0.3, rp.z);
     }
+
+    // Call modular Chat logic with full state context
+    robotChat.update(cam, arcadeIsOpen, arcadeHovered);
+
     sceneManager.cameraCtrl.update(dt);
 
     sceneManager.render();

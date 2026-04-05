@@ -14,6 +14,8 @@ export class Robot {
     this.targetOpacity = 1.0;
     this.currentOpacity = 1.0;
     this.targetScale = config.robot.scale;
+    this.waveMeshes = new Array(7).fill(null);
+    this.antennaMesh = null;
 
     this.group.position.set(...config.robot.states.home.pos);
     this.group.rotation.y = config.robot.states.home.rotY;
@@ -30,13 +32,38 @@ export class Robot {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          // Keep materials solid to avoid "missing parts" glitch
+          
           if (child.material) {
-            child.material.emissive = new THREE.Color(config.robot.emissive);
-            child.material.emissiveIntensity = config.robot.emissiveIntensity;
+            // Keep materials solid to avoid "missing parts" glitch
             child.material.transparent = false;
             child.material.opacity = 1.0;
             child.material.depthWrite = true;
+
+            const lowerName = child.name.toLowerCase();
+            
+            // Check for the antenna to anchor the chat bubble
+            if (lowerName.includes('angten')) {
+               this.antennaMesh = child;
+            }
+
+            const waveMatch = lowerName.match(/wave_(\d)/);
+            
+            if (waveMatch) {
+              const index = parseInt(waveMatch[1]) - 1;
+              if (index >= 0 && index < 7) {
+                // Unique materials needed to animate them independently
+                child.material = child.material.clone();
+                // Base color extremely dark so it looks unlit when "Off"
+                child.material.color = new THREE.Color(0x0a1a0a);
+                // Pure Neon Green Light when turning "On"
+                child.material.emissive = new THREE.Color(0x33ff33); 
+                child.material.emissiveIntensity = 0.0;
+                this.waveMeshes[index] = child.material;
+              }
+            } else {
+              child.material.emissive = new THREE.Color(config.robot.emissive);
+              child.material.emissiveIntensity = config.robot.emissiveIntensity;
+            }
           }
         }
       });
@@ -89,5 +116,26 @@ export class Robot {
 
     this.group.position.y = this.targetPos.y + Math.sin(elapsedTime * config.robot.floatSpeed) * config.robot.floatAmplitude;
     this.targetRotY += config.robot.idleRotateSpeed;
+
+    // --- Wave segment Battery Charging effect ---
+    if (this.waveMeshes && this.waveMeshes.length > 0) {
+      // Creates a loop from 0 to 8 over time
+      const chargeLevel = Math.floor((elapsedTime * 3.0) % 9.0); 
+      
+      this.waveMeshes.forEach((mat, i) => {
+        if (!mat) return;
+        
+        // Reverse the index so wave_7 (i=6) lights up first, down to wave_1 (i=0)
+        const reverseIndex = 6 - i;
+        
+        // If the reversed index is below the current charge level, it illuminates brightly
+        if (reverseIndex < chargeLevel) {
+          mat.emissiveIntensity = 20.0; // Fully charged segment (Extreme glow)
+        } else {
+          // Completely unlit segments (Dead dark green plastic/glass)
+          mat.emissiveIntensity = 0.0; 
+        }
+      });
+    }
   }
 }

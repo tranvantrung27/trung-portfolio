@@ -1,0 +1,71 @@
+/* 
+ * Cyberpunk Chat Bubble for Robot
+ */
+.cyber-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* Let clicks pass through to 3D */
+  z-index: 100;
+  
+  /* Cyber styling matching the green LED */
+  background: rgba(10, 26, 10, 0.85);
+  border: 1px solid #00ff00;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4), inset 0 0 10px rgba(0, 255, 0, 0.2);
+  border-radius: 8px 8px 8px 0;
+  padding: 10px 16px;
+  
+  max-width: 250px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  
+  transform: translate(-50%, -100%);
+  opacity: 1;
+  /* Bỏ transition transform để nó dính chặt lập tức, không trượt 1 quãng từ 0,0 vào gây mất thẩm mỹ */
+  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+}
+
+/* Hide utility */
+.cyber-bubble.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+}
+
+/* The glowing text inside */
+.cyber-bubble-text {
+  color: #caffca;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+}
+
+/* The pointer tail pointing to the antenna */
+.cyber-bubble-pointer {
+  position: absolute;
+  bottom: -10px;
+  left: 50%; /* Trỏ từ chính giữa đáy bong bóng */
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid rgba(10, 26, 10, 0.85); /* Nền tối */
+  /* Border Neon dưới đáy */
+  filter: drop-shadow(0 2px 2px rgba(0, 255, 0, 0.8));
+}
+
+/* A glowing line for the pointer part to match the border */
+.cyber-bubble-pointer::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -8px;
+  width: 16px;
+  height: 1px;
+  background: #00ff00; /* Viền sáng Neon trên đỉnh kẽ hở nếu cần thiết */
+  box-shadow: 0 0 5px #00ff00;
+  display: none; /* Ẩn đi vì filter drop-shadow ở trên đã đủ đẹp */
+}
