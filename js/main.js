@@ -32,6 +32,7 @@ window.arcade = arcade; // Debug only
 // ─── Game & HUD State ─────────────────────────────────────────────────────────
 
 let isGameActive = false;
+let arcadeIsOpen = false; // Disables camera follow while zoomed into arcade
 const overlay = document.getElementById('game-overlay');
 const btnYes = document.getElementById('game-yes');
 const btnNo = document.getElementById('game-no');
@@ -77,10 +78,25 @@ window.addEventListener('pointermove', (e) => {
 });
 
 window.addEventListener('pointerdown', (e) => {
-  if (!isGameActive || e.button !== 0) return;
+  if (e.button !== 0) return;
+  // Disable 3D interactions when arcade is zoomed
+  if (arcadeIsOpen) return;
 
   const nx = (e.clientX / window.innerWidth) * 2 - 1;
   const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  // Arcade click — only when not in game mode and arcade is visible on home
+  if (!isGameActive && arcade.loaded && arcade.isHome) {
+    raycaster.setFromCamera(new THREE.Vector2(nx, ny), cam);
+    const arcadeHits = raycaster.intersectObjects(arcade.meshes, false);
+    if (arcadeHits.length > 0) {
+      arcadeIsOpen = true;
+      arcade.openArcade(sceneManager.cameraCtrl);
+      return;
+    }
+  }
+
+  if (!isGameActive) return;
 
   // 1. Check if we are clicking the Gun itself for Inspection Mode
   const isGunInteraction = gun.handleClick(nx, ny);
@@ -89,6 +105,20 @@ window.addEventListener('pointerdown', (e) => {
   if (!isGunInteraction) {
     gun.triggerFire();
     mosquito.checkHit(gun.muzzleNDC);
+  }
+});
+
+// ─── Browser Scroll & Interaction Locking ─────────────────────────────────────
+const preventScroll = (e) => {
+  if (arcadeIsOpen) e.preventDefault();
+};
+
+window.addEventListener('wheel', preventScroll, { passive: false });
+window.addEventListener('touchmove', preventScroll, { passive: false });
+window.addEventListener('keydown', (e) => {
+  if (arcadeIsOpen) {
+    const keys = ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End'];
+    if (keys.includes(e.code)) e.preventDefault();
   }
 });
 
@@ -108,7 +138,18 @@ if (btnYes && btnNo && overlay) {
   });
 }
 
-// ─── Main Logic ─────────────────────────────────────────────────────────────
+// ─── Arcade Close Button ──────────────────────────────────────────────────────
+
+document.getElementById('arcade-close')?.addEventListener('click', () => {
+  const rp = robot.group.position;
+  const homeTarget = { x: rp.x * 0.12 + 0.3, y: 0.9, z: 7 };
+  const homeLookAt = { x: rp.x * 0.25, y: 0.3, z: rp.z };
+  
+  arcade.closeArcade(sceneManager.cameraCtrl, homeTarget, homeLookAt, () => {
+    arcadeIsOpen = false;
+  });
+});
+
 
 robot.load(MODELS.CHARACTERS.ROBOT, () => {
   arcade.load(MODELS.CHARACTERS.ARCADE);
@@ -128,9 +169,12 @@ robot.load(MODELS.CHARACTERS.ROBOT, () => {
       mosquito.update(dt);
     }
 
-    const rp = robot.group.position;
-    sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);
-    sceneManager.cameraCtrl.setLookAt(rp.x * 0.25, 0.3, rp.z);
+    // Only follow robot with camera when not zoomed into arcade
+    if (!arcadeIsOpen) {
+      const rp = robot.group.position;
+      sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);
+      sceneManager.cameraCtrl.setLookAt(rp.x * 0.25, 0.3, rp.z);
+    }
     sceneManager.cameraCtrl.update(dt);
 
     sceneManager.render();

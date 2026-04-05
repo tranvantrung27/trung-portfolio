@@ -1,0 +1,177 @@
+#arcade-overlay {
+  display: none; /* reserved for game content later */
+  pointer-events: none;
+}
+
+/* ── Back button — shown alone after zoom, not tied to overlay ── */
+.arcade-back-btn {
+  display: none;
+  position: fixed;
+  bottom: 5rem;
+  left: 4rem;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: #00ff50;
+  color: #111;
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(0,255,80,0.6);
+  transition: all 0.2s, opacity 0.4s;
+  z-index: 510;
+}
+
+.arcade-back-btn:hover {
+  background: #00e640;
+  transform: scale(1.15);
+  box-shadow: 0 0 32px rgba(0,255,80,0.8);
+}
+
+
+/* ── CRT Screen container ── */
+.arcade-screen-wrap {
+  position: relative;
+  width: min(520px, 85vw);
+  aspect-ratio: 4/3;
+}
+
+/* CRT outer bezel */
+.arcade-crt {
+  width: 100%;
+  height: 100%;
+  background: #111;
+  border-radius: 20px;
+  border: 6px solid #222;
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 40px rgba(0, 255, 80, 0.25),
+    inset 0 0 30px rgba(0,0,0,0.6);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scanline overlay */
+.arcade-crt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* CRT vignette edges */
+.arcade-crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.8) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── Screen content ── */
+.arcade-screen-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-family: 'Courier New', 'VT323', monospace;
+  color: #00ff50;
+  text-shadow: 0 0 8px #00ff50;
+  padding: 2rem;
+  width: 100%;
+}
+
+.arcade-screen-title {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: bold;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.25em;
+  animation: arcade-blink 2s step-end infinite;
+}
+
+.arcade-screen-subtitle {
+  font-size: clamp(0.9rem, 2vw, 1.4rem);
+  letter-spacing: 0.15em;
+  margin-bottom: 2rem;
+  opacity: 0.85;
+}
+
+.arcade-screen-badge {
+  display: inline-block;
+  font-size: clamp(0.55rem, 1.2vw, 0.75rem);
+  letter-spacing: 0.2em;
+  color: #00cc40;
+  background: rgba(0,255,80,0.08);
+  border: 1px solid rgba(0,255,80,0.3);
+  padding: 0.3em 0.8em;
+  border-radius: 2px;
+  margin-bottom: 2rem;
+}
+
+/* ── Slot list ── */
+.arcade-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 2rem;
+}
+
+.arcade-slot {
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  letter-spacing: 0.15em;
+  color: #aaffcc;
+  text-shadow: 0 0 6px #00ff80;
+  cursor: pointer;
+  padding: 0.3em 1em;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.arcade-slot:hover,
+.arcade-slot.active {
+  color: #00ff50;
+  border-color: rgba(0,255,80,0.5);
+  background: rgba(0,255,80,0.08);
+  text-shadow: 0 0 12px #00ff50;
+}
+
+.arcade-slot.active::before {
+  content: '▶ ';
+}
+
+.arcade-hint {
+  font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+  letter-spacing: 0.15em;
+  color: #00cc40;
+  opacity: 0.65;
+  line-height: 1.7;
+}
+
+/* Blinking cursor */
+@keyframes arcade-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Ambient glow around CRT */
+.arcade-glow-ring {
+  position: absolute;
+  inset: -20px;
+  border-radius: 30px;
+  box-shadow: 0 0 60px rgba(0,255,80,0.12);
+  pointer-events: none;
+}

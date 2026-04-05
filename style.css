@@ -15,6 +15,7 @@
 @import './css/components/loader.css';
 @import './css/components/navbar.css';
 @import './css/components/game-hud.css';
+@import './css/components/arcade-overlay.css';
 
 /* Sections */
 @import './css/sections/hero.css';
