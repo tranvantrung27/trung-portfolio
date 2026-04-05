@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trung | AI Developer Portfolio</title>
+  <meta name="description"
+    content="AI Developer chuyên về Deep Learning, Computer Vision và phát triển ứng dụng thông minh." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet" />
+
+  <!-- Import Map: resolve bare specifiers to CDN -->
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+        "three/examples/jsm/loaders/GLTFLoader.js": "https://unpkg.com/three@0.160.1/examples/jsm/loaders/GLTFLoader.js",
+        "gsap": "https://esm.sh/gsap@3.12.5",
+        "gsap/ScrollTrigger": "https://esm.sh/gsap@3.12.5/ScrollTrigger"
+      }
+    }
+    </script>
+  <script type="module" crossorigin src="./assets/index-Dy_64nad.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Df2tyyNA.css">
+</head>
+
+<body>
+  <!-- Premium Loader -->
+  <div id="loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <p class="gradient-text loader-text">LOADING</p>
+    </div>
+  </div>
+
+  <!-- Mini Game Overlay Prompt -->
+  <div id="game-overlay" role="dialog" aria-modal="true" aria-labelledby="game-prompt">
+    <div class="game-overlay-card">
+      <p id="game-prompt">Bạn có đang buồn chán không?<br><span>Giải trí xíu nhé 😏</span></p>
+      <div class="game-overlay-btns">
+        <button id="game-yes" class="game-btn-yes">YES 🎯</button>
+        <button id="game-no" class="game-btn-no">NO 😐</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav id="navbar">
+    <div class="logo">TRUNG<span class="gradient-text">.</span></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home" class="nav-link active">Home</a></li>
+      <li><a href="#projects" class="nav-link">Projects</a></li>
+      <li><a href="#skills" class="nav-link">Skills</a></li>
+      <li><a href="#contact" class="nav-link">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Canvas Background (Robot renders here) -->
+  <canvas id="bg"></canvas>
+
+  <!-- Main Content Overlays -->
+  <main>
+    <!-- HERO -->
+    <section id="home" class="visible hero-section">
+      <div class="hero-content">
+        <p class="hero-tag">AI DEVELOPER</p>
+        <h1>Hi, I'm <span class="gradient-text">Trung</span></h1>
+        <p class="hero-subtitle">Chuyên về Deep Learning, Computer Vision và phát triển ứng dụng.</p>
+      </div>
+
+      <div class="scroll-indicator">
+        <div class="mouse">
+          <div class="wheel"></div>
+        </div>
+        <p class="scroll-label">Scroll to Explore</p>
+      </div>
+    </section>
+
+    <!-- PROJECTS — rendered by renderer.js -->
+    <section id="projects">
+      <h2><span class="gradient-text">SELECTED WORKS</span></h2>
+      <div class="project-grid">
+        <!-- Populated from content.js -->
+      </div>
+    </section>
+
+    <!-- SKILLS — rendered by renderer.js -->
+    <section id="skills">
+      <h2><span class="gradient-text">CORE EXPERTISE</span></h2>
+      <div class="skills-container">
+        <!-- Populated from content.js -->
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <h2>LET'S <br /><span class="gradient-text">BUILD TOGETHER</span></h2>
+      <p class="contact-subtitle"></p>
+      <a href="#" class="cta-btn"></a>
+    </section>
+  </main>
+
+  <!-- Footer — rendered by renderer.js -->
+  <footer id="footer">
+    <div class="footer-content">
+      <div class="footer-brand">TRUNG<span class="gradient-text">.</span></div>
+      <div class="footer-links">
+        <!-- Populated from content.js -->
+      </div>
+      <p class="footer-copy"></p>
+    </div>
+  </footer>
+
+  <!-- Mini Game HUD Elements -->
+  <div id="crosshair">
+    <div class="crosshair-dot"></div>
+  </div>
+
+</body>
+
+</html>

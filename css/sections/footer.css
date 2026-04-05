@@ -1,0 +1,67 @@
+/* ========================================
+   FOOTER
+   ======================================== */
+#footer {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(10, 10, 15, 0.6);
+  pointer-events: auto;
+}
+
+.footer-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 8%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.footer-brand {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 28px;
+}
+
+.footer-links a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color var(--transition-fast),
+              transform var(--transition-fast);
+}
+
+.footer-links a:hover {
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.footer-links svg {
+  flex-shrink: 0;
+}
+
+.footer-copy {
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.5);
+  max-width: none;
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    padding: 32px 6%;
+  }
+}

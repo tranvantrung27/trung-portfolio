@@ -1,0 +1,136 @@
+/* ========================================
+   GAME OVERLAY — YES/NO Prompt
+   ======================================== */
+#game-overlay {
+  display: none; /* shown via JS after loader fades */
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2, 6, 23, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  align-items: center;
+  justify-content: center;
+}
+
+#game-overlay.visible {
+  display: flex;
+  animation: fadeInOverlay 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.game-overlay-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 40px 48px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.game-overlay-card p {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 28px;
+  max-width: none;
+}
+
+.game-overlay-card p span {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+.game-overlay-btns {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.game-btn-yes,
+.game-btn-no {
+  padding: 12px 36px;
+  border-radius: var(--radius-pill);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+  border: none;
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast),
+              background var(--transition-fast);
+  letter-spacing: 0.5px;
+}
+
+.game-btn-yes {
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  color: #fff;
+}
+
+.game-btn-yes:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.45);
+}
+
+.game-btn-no {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.game-btn-no:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+#game-overlay button { pointer-events: auto; }
+
+/* ========================================
+   GAME HUD — Crosshair & Elements
+   ======================================== */
+#crosshair {
+  display: none;
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #00f7ff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  box-shadow: 0 0 8px rgba(0, 247, 255, 0.6);
+  will-change: transform;
+}
+
+.crosshair-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  background: #00f7ff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#crosshair.visible {
+  display: block;
+}
+
+#crosshair.shoot {
+  border-color: #ff3c00;
+}
+
+#crosshair.shoot .crosshair-dot {
+  background: #ff3c00;
+}

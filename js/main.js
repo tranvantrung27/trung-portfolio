@@ -1,0 +1,134 @@
+import { SceneManager } from './core/Engine.js';
+import { MODELS } from './config/models.js';
+import { Robot } from './entities/Robot.js';
+import { Mosquito } from './entities/Mosquito.js';
+import { Gun } from './entities/Gun.js';
+import { Arcade } from './entities/Arcade.js';
+import { ScrollManager } from './managers/ScrollManager.js';
+import { UIManager } from './ui/Navbar.js';
+import { renderContent } from './ui/ContentRenderer.js';
+import * as THREE from 'three';
+
+/**
+ * ROBOT PORTFOLIO — Entry Point
+ */
+
+renderContent();
+
+const canvas = document.querySelector('#bg');
+const sceneManager = new SceneManager(canvas);
+const clock = new THREE.Clock();
+const cam = sceneManager.cameraCtrl.camera;
+
+// ─── 3D Objects ───────────────────────────────────────────────────────────────
+
+const robot = new Robot(sceneManager.scene);
+// Gun receives the renderer so it can render its own HUD scene on top
+const gun = new Gun(sceneManager.renderer, cam);
+const mosquito = new Mosquito(sceneManager.scene, cam);
+const arcade = new Arcade(sceneManager.scene);
+window.arcade = arcade; // Debug only
+
+// ─── Game & HUD State ─────────────────────────────────────────────────────────
+
+let isGameActive = false;
+const overlay = document.getElementById('game-overlay');
+const btnYes = document.getElementById('game-yes');
+const btnNo = document.getElementById('game-no');
+
+function updateHUD(onHome) {
+  const isVisible = isGameActive && onHome;
+  if (isVisible) {
+    gun.enable();
+    mosquito.enable();
+  } else {
+    gun.disable();
+    mosquito.disable();
+  }
+}
+
+// ─── Mouse Pointer Control ───────────────────────────────────────────────────
+
+window.addEventListener('pointermove', (e) => {
+  if (!isGameActive) return;
+
+  const nx = (e.clientX / window.innerWidth) * 2 - 1;
+  const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  gun.updatePointer(nx, ny);
+});
+
+window.addEventListener('pointerdown', (e) => {
+  if (!isGameActive || e.button !== 0) return;
+
+  const nx = (e.clientX / window.innerWidth) * 2 - 1;
+  const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  // 1. Check if we are clicking the Gun itself for Inspection Mode
+  const isGunInteraction = gun.handleClick(nx, ny);
+
+  // 2. If it wasn't a gun click, proceed with Firing & Hit detection
+  if (!isGunInteraction) {
+    gun.triggerFire();
+    mosquito.checkHit(gun.muzzleNDC);
+  }
+});
+
+// ─── Game Overlay Logic ───────────────────────────────────────────────────────
+
+if (btnYes && btnNo && overlay) {
+  btnYes.addEventListener('click', () => {
+    isGameActive = true;
+    overlay.classList.remove('visible');
+    updateHUD(true);
+  });
+
+  btnNo.addEventListener('click', () => {
+    isGameActive = false;
+    overlay.classList.remove('visible');
+    updateHUD(false);
+  });
+}
+
+// ─── Main Logic ─────────────────────────────────────────────────────────────
+
+robot.load(MODELS.CHARACTERS.ROBOT, () => {
+  arcade.load(MODELS.CHARACTERS.ARCADE);
+  const scrollManager = new ScrollManager(robot, gun, mosquito, arcade, () => isGameActive);
+
+  const ui = new UIManager();
+  window.addEventListener('resize', () => sceneManager.onResize());
+
+  function tick() {
+    const dt = clock.getDelta();
+    robot.update(dt, clock.elapsedTime);
+
+    // Update mini-game components
+    arcade.update(dt);
+    if (isGameActive) {
+      gun.update(dt);
+      mosquito.update(dt);
+    }
+
+    const rp = robot.group.position;
+    sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);
+    sceneManager.cameraCtrl.setLookAt(rp.x * 0.25, 0.3, rp.z);
+    sceneManager.cameraCtrl.update(dt);
+
+    sceneManager.render();
+    gun.renderHUD(); // Draw gun on top of main scene
+    requestAnimationFrame(tick);
+  }
+
+  tick();
+
+  const loader = document.querySelector('#loader');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      loader.remove();
+      // Show game starting prompt only after loader (DISABLED for now)
+      if (overlay) overlay.classList.add('visible');
+    }, 800);
+  }
+});

@@ -1,0 +1,81 @@
+/* ========================================
+   RESET & BASE
+   ======================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-main);
+  background: radial-gradient(circle at 70% 40%, #1e293b 0%, #0f172a 40%, #020617 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Ambient glow behind robot area */
+body::before {
+  content: "";
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  top: 30%;
+  left: 65%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* CANVAS — 3D Background Layer */
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* MAIN OVERLAY — Content Layer */
+main {
+  position: relative;
+  z-index: 2;
+  min-height: 400vh;
+  pointer-events: none;
+}
+
+/* SECTIONS BASE */
+section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 8%;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+section.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 6%;
+  }
+}
+
+@media (max-width: 480px) {
+  section {
+    padding: 50px 5%;
+  }
+}

@@ -26,6 +26,22 @@
 </head>
 
 <body>
+  <!-- Mobile / Small Screen Notice -->
+  <div id="mobile-notice">
+    <div class="mobile-notice-content">
+      <div class="mobile-notice-icon">:(</div>
+      <p class="mobile-notice-text">
+        Rất tiếc, trang web cá nhân của tôi hiện không được tối ưu hóa cho thiết bị di động,
+        nhưng tôi đang tích cực làm việc để cải thiện điều này.
+      </p>
+      <p class="mobile-notice-cta">
+        Để có trải nghiệm tốt nhất, vui lòng truy cập trang web của tôi từ
+        <strong>máy tính để bàn</strong> hoặc <strong>máy tính xách tay</strong>.
+      </p>
+      <p class="mobile-notice-thanks">Cảm ơn bạn! &lt;3</p>
+    </div>
+  </div>
+
   <!-- Premium Loader -->
   <div id="loader">
     <div class="loader-content">
@@ -33,6 +49,18 @@
       <p class="gradient-text loader-text">LOADING</p>
     </div>
   </div>
+
+  <!-- Mini Game Overlay Prompt (Hidden for now as requested)
+  <div id="game-overlay" role="dialog" aria-modal="true" aria-labelledby="game-prompt">
+    <div class="game-overlay-card">
+      <p id="game-prompt">Bạn có đang buồn chán không?<br><span>Giải trí xíu nhé 😏</span></p>
+      <div class="game-overlay-btns">
+        <button id="game-yes" class="game-btn-yes">YES 🎯</button>
+        <button id="game-no" class="game-btn-no">NO 😐</button>
+      </div>
+    </div>
+  </div>
+  -->
 
   <!-- Navigation Bar -->
   <nav id="navbar">
@@ -104,7 +132,12 @@
     </div>
   </footer>
 
-  <script type="module" src="./main.js"></script>
+  <!-- Mini Game HUD Elements -->
+  <div id="crosshair">
+    <div class="crosshair-dot"></div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
 </body>
 
 </html>

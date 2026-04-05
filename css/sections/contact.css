@@ -1,0 +1,46 @@
+/* ========================================
+   CONTACT SECTION & CTA
+   ======================================== */
+.cta-btn {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 28px;
+  padding: 14px 40px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast);
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.cta-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+}
+
+.cta-btn:hover::before {
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .cta-btn {
+    padding: 12px 32px;
+    font-size: 0.92rem;
+  }
+}

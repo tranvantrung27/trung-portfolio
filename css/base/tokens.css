@@ -1,0 +1,22 @@
+/* ========================================
+   DESIGN TOKENS
+   ======================================== */
+:root {
+  --primary: #8b5cf6;
+  --secondary: #3b82f6;
+  --bg: #0a0a0f;
+  --text: #f0f0f5;
+  --text-muted: #94a3b8;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(139, 92, 246, 0.35);
+  --font-main: 'Outfit', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --transition-fast: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { config } from '../utils.js';
+import { config } from '../utils/utils.js';
 
 /**
  * Creates the 3D scene with cinematic studio lighting.
@@ -9,6 +9,7 @@ export function createScene() {
   const scene = new THREE.Scene();
 
   scene.background = null;
+  scene.environment = new THREE.Color(0x222233);
   scene.fog = new THREE.FogExp2(0x0f172a, 0.035);
 
   const ambient = new THREE.AmbientLight(config.lighting.ambient.color, config.lighting.ambient.intensity);
@@ -21,10 +22,10 @@ export function createScene() {
   keyLight.shadow.mapSize.height = 2048;
   keyLight.shadow.camera.near = 0.5;
   keyLight.shadow.camera.far = 30;
-  keyLight.shadow.camera.left = -6;
-  keyLight.shadow.camera.right = 6;
-  keyLight.shadow.camera.top = 6;
-  keyLight.shadow.camera.bottom = -6;
+  keyLight.shadow.camera.left = -10;
+  keyLight.shadow.camera.right = 10;
+  keyLight.shadow.camera.top = 10;
+  keyLight.shadow.camera.bottom = -10;
   keyLight.shadow.bias = -0.0005;
   keyLight.shadow.normalBias = 0.02;
   scene.add(keyLight);

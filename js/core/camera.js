@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { config } from '../utils.js';
+import { config } from '../utils/utils.js';
 
 export class CameraController {
   constructor() {

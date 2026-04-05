@@ -1,0 +1,80 @@
+/* ========================================
+   HERO SECTION
+   ======================================== */
+.hero-section {
+  max-width: 55%;
+}
+
+.hero-tag {
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+}
+
+/* SCROLL INDICATOR */
+.scroll-indicator {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: opacity var(--transition-slow);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.mouse {
+  width: 26px;
+  height: 44px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  position: relative;
+}
+
+.wheel {
+  width: 4px;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 2px;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollAnim 1.8s infinite;
+}
+
+@keyframes scrollAnim {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(0); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(16px); }
+}
+
+.scroll-label {
+  font-size: 0.7rem !important;
+  color: rgba(255, 255, 255, 0.25) !important;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    max-width: 100%;
+    padding-top: 100px;
+  }
+
+  /* Scroll indicator: smaller */
+  .scroll-indicator {
+    bottom: 20px;
+  }
+}
