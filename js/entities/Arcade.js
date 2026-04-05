@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
 import { config } from '../utils/utils.js';
+import { SOUNDS } from '../managers/SoundManager.js';
 
 const OFF_SCREEN_X = 18; // Far right X — slides off screen to here
 
@@ -186,7 +187,7 @@ export class Arcade {
     document.body.style.overflow = 'hidden'; // Block scrolling while zoomed in
 
     // Play zoom sound effect
-    const zoomSound = new Audio('/assets/sounds/whoosh__.mp3');
+    const zoomSound = new Audio(SOUNDS.SFX.WHOOSH);
     zoomSound.volume = 0.6;
     zoomSound.play().catch(e => console.warn('Could not play zoom sound:', e));
 
@@ -252,7 +253,7 @@ export class Arcade {
     this.isOpen = false;
 
     // Play zoom out sound effect
-    const backSound = new Audio('/assets/sounds/whoosh__.mp3');
+    const backSound = new Audio(SOUNDS.SFX.WHOOSH);
     backSound.volume = 0.6;
     backSound.play().catch(e => console.warn('Could not play back sound:', e));
 
