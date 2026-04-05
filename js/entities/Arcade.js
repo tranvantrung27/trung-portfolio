@@ -11,6 +11,7 @@ export class Arcade {
     this.group = new THREE.Group();
     this.isHome = true;
     this.loaded = false;
+    this.meshes = []; // All meshes — used by OutlinePass
 
     const homeState = config.arcade.home;
     this.homePos = new THREE.Vector3(...homeState.pos);
@@ -52,6 +53,7 @@ export class Arcade {
               child.material.emissive = new THREE.Color(0x3366ff);
               child.material.emissiveIntensity = 5.0;
             }
+            this.meshes.push(child); // Track for outline
           }
         });
 
@@ -124,6 +126,17 @@ export class Arcade {
       ease: 'power3.in',
       overwrite: true,
     });
+  }
+
+  /**
+   * Toggle the outline glow highlight on hover.
+   * @param {boolean} isHovered
+   * @param {OutlinePass} outlinePass - from sceneManager.outlinePass
+   */
+  setHover(isHovered, outlinePass) {
+    if (!outlinePass || !this.loaded) return;
+    outlinePass.selectedObjects = isHovered ? this.meshes : [];
+    document.body.style.cursor = isHovered ? 'pointer' : '';
   }
 
   // update() is intentionally empty — GSAP handles all animation

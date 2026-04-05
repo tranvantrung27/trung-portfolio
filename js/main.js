@@ -49,12 +49,30 @@ function updateHUD(onHome) {
 
 // ─── Mouse Pointer Control ───────────────────────────────────────────────────
 
-window.addEventListener('pointermove', (e) => {
-  if (!isGameActive) return;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let arcadeHovered = false;
 
+window.addEventListener('pointermove', (e) => {
   const nx = (e.clientX / window.innerWidth) * 2 - 1;
   const ny = -(e.clientY / window.innerHeight) * 2 + 1;
+  mouse.set(nx, ny);
 
+  // Arcade hover raycasting (only when loaded and on home)
+  if (arcade.loaded && arcade.isHome) {
+    raycaster.setFromCamera(mouse, cam);
+    const hits = raycaster.intersectObjects(arcade.meshes, false);
+    const nowHovered = hits.length > 0;
+    if (nowHovered !== arcadeHovered) {
+      arcadeHovered = nowHovered;
+      arcade.setHover(arcadeHovered, sceneManager.outlinePass);
+    }
+  } else if (arcadeHovered) {
+    arcadeHovered = false;
+    arcade.setHover(false, sceneManager.outlinePass);
+  }
+
+  if (!isGameActive) return;
   gun.updatePointer(nx, ny);
 });
 
