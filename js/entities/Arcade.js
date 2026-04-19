@@ -115,6 +115,24 @@ export class Arcade {
               };
 
               console.log('Arcade Screen Measured:', this.calibrationData);
+            } else {
+              // Bắt lấy Material chữ TRUNG ('Material.005' hoặc mesh 'Text.001')
+              const mat = Array.isArray(child.material) ? child.material[0] : child.material;
+              const isMarquee = (mat && mat.name === 'Material.005') || child.name.includes('Text.001');
+
+              if (isMarquee && mat) {
+                if (Array.isArray(child.material)) {
+                  child.material[0] = child.material[0].clone();
+                } else {
+                  child.material = child.material.clone();
+                }
+                this.marqueeMaterial = Array.isArray(child.material) ? child.material[0] : child.material;
+                // Màu xanh Neon cực mạnh (Vibrant Green)
+                this.marqueeMaterial.emissive = new THREE.Color('#33ff77');
+                this.marqueeMaterial.emissiveIntensity = 5.0; // Tăng mạnh độ rực
+                this.marqueeMaterial.needsUpdate = true;
+                console.log("✅ Marquee targeted via:", child.name);
+              }
             }
             this.meshes.push(child);
           }
@@ -338,19 +356,31 @@ export class Arcade {
 
   update(dt, isGameRunning = false) {
     this.jumpScare.update(dt);
+
+    this.time = (this.time || 0) + dt;
+
+    // Nhịp thở màn hình game: Chỉ nháy khi CHƯA bấm vào máy
+    if (this.screenMaterial) {
+      if (this.isOpen || isGameRunning) {
+        // Khi đã bấm vào hoặc đang chơi: Giữ độ sáng 100% để trải nghiệm tốt nhất
+        this.screenMaterial.color.setScalar(1.0);
+      } else {
+        // Khi ở xa: Nhấp nháy chậm chậm để thu hút (Pulse từ 0.3 -> 1.0)
+        // Dùng color.setScalar để hoạt động được trên cả MeshBasicMaterial sếp vừa đổi
+        const screenPulse = Math.sin(this.time * 2.0) * 0.35 + 0.65;
+        this.screenMaterial.color.setScalar(screenPulse);
+      }
+    }
+    
+    // Chữ TRUNG giữ nguyên màu sắc rực rỡ nhưng không nháy
+    if (this.marqueeMaterial) {
+      this.marqueeMaterial.emissiveIntensity = 4.0;
+    }
+
     if (!this.screenMaterial) return;
 
     if (isGameRunning || this.isOpen) {
-      this.screenMaterial.emissiveIntensity = 3.5;
-      return;
-    }
-
-    this.time = (this.time || 0) + dt;
-    const cycle = this.time % 1.2;
-    if (cycle < 0.8) {
-      this.screenMaterial.emissiveIntensity = 3.5;
-    } else {
-      this.screenMaterial.emissiveIntensity = 0.5;
+      return; 
     }
   }
 }

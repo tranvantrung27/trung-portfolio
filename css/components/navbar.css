@@ -5,7 +5,8 @@ nav {
   position: fixed;
   top: 0;
   width: 100%;
-  padding: 16px 8%;
+  height: 64px; /* Slimmed down from 80px for a sleeker look */
+  padding: 0 8%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -18,9 +19,26 @@ nav {
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: -1px;
+  font-family: 'AirTravelers';
+  font-size: 1.8rem; /* Reduced for the slimmer navbar */
+  line-height: 0.8;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  position: relative;
+}
+
+.logo::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background-color: #fff;
+  border-radius: 50%;
+  margin-left: 6px;
+  margin-top: 10px; /* Offset to align with the bottom of the script font */
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 }
 
 .nav-links {

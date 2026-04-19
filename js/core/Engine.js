@@ -35,9 +35,9 @@ export class SceneManager {
 
     // Outline pass — used for arcade hover highlight
     this.outlinePass = new OutlinePass(size, this.scene, this.cameraCtrl.camera);
-    this.outlinePass.edgeStrength   = 5.0;
-    this.outlinePass.edgeGlow       = 0.7;
-    this.outlinePass.edgeThickness  = 2.0;
+    this.outlinePass.edgeStrength = 5.0;
+    this.outlinePass.edgeGlow = 0.7;
+    this.outlinePass.edgeThickness = 2.0;
     this.outlinePass.visibleEdgeColor.set('#ffffff');
     this.outlinePass.hiddenEdgeColor.set('#ff3333');
     this.outlinePass.selectedObjects = [];

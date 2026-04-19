@@ -10,30 +10,58 @@
   justify-content: center;
   z-index: 9999;
   transition: opacity 0.8s ease;
+  overflow: hidden;
+}
+
+#loader-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .loader-content {
+  position: relative;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
 }
 
-.loader-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.loader-logo {
+  width: 400px;
 }
 
-.loader-text {
-  font-size: 0.9rem;
-  letter-spacing: 4px;
-  font-weight: 600;
+.logo-text-animated {
+  font-family: 'AirTravelers';
+  font-size: 160px;
+  stroke: white;
+  stroke-width: 1.2;
+  fill: transparent;
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+  animation: draw-and-fill 3s cubic-bezier(0.4, 0, 0.2, 1) forwards infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes draw-and-fill {
+  0% {
+    stroke-dashoffset: 800;
+    fill: rgba(255, 255, 255, 0);
+  }
+  50% {
+    stroke-dashoffset: 0;
+    fill: rgba(255, 255, 255, 0);
+  }
+  80% {
+    stroke-dashoffset: 0;
+    fill: rgba(255, 255, 255, 1);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    fill: rgba(255, 255, 255, 0);
+  }
 }
+
+

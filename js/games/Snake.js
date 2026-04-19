@@ -6,6 +6,9 @@ import { BaseGame } from './BaseGame.js';
 export class Snake extends BaseGame {
   constructor(canvas) {
     super(canvas);
+    // Tải âm thanh nhai mồi
+    this.chompAudio = new Audio('./assets/sounds/chomp_snake.mp3');
+    this.chompAudio.volume = 0.8;
     this.reset();
   }
 
@@ -77,6 +80,10 @@ export class Snake extends BaseGame {
 
     // Food collision
     if (head.x === this.food.x && head.y === this.food.y) {
+      if (this.chompAudio) {
+        this.chompAudio.currentTime = 0; // Trả về đầu file để nhai liên tục không bị kẹt khi ăn nhanh
+        this.chompAudio.play().catch(e => console.warn(e));
+      }
       this.score += 10;
       this.spawnFood();
       // Khắc nghiệt hơn: Tăng tốc độ nhanh hơn (rút ngắn thời gian nghỉ 6% mỗi trái)

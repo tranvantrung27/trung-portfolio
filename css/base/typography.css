@@ -1,6 +1,13 @@
 /* ========================================
    TYPOGRAPHY
    ======================================== */
+@font-face {
+  font-family: 'AirTravelers';
+  src: url('/assets/font/Trung/AirtravelerspersonaluseBdit-ow59x.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 h1 {
   font-size: clamp(2.8rem, 8vw, 5rem);
   font-weight: 900;

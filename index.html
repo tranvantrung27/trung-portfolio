@@ -60,9 +60,19 @@
 
   <!-- Premium Loader -->
   <div id="loader">
+    <canvas id="loader-canvas"></canvas>
     <div class="loader-content">
-      <div class="loader-spinner"></div>
-      <p class="gradient-text loader-text">LOADING</p>
+      <svg class="loader-logo" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text 
+          x="50%" 
+          y="60%" 
+          dominant-baseline="middle" 
+          text-anchor="middle" 
+          class="logo-text-animated"
+        >
+          Trung.
+        </text>
+      </svg>
     </div>
   </div>
 
@@ -80,7 +90,7 @@
 
   <!-- Navigation Bar -->
   <nav id="navbar">
-    <div class="logo">TRUNG<span class="gradient-text">.</span></div>
+    <div class="logo">Trung</div>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
       <span></span><span></span><span></span>
     </button>
@@ -140,7 +150,7 @@
   <!-- Footer — rendered by renderer.js -->
   <footer id="footer">
     <div class="footer-content">
-      <div class="footer-brand">TRUNG<span class="gradient-text">.</span></div>
+      <div class="logo">Trung.</div>
       <div class="footer-links">
         <!-- Populated from content.js -->
       </div>
