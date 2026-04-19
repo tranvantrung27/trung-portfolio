@@ -24,7 +24,7 @@ export default class App {
   constructor() {
     this.canvas = document.querySelector('#bg');
     this.clock = new THREE.Clock();
-    
+
     // Systems
     this.sceneManager = null;
     this.gameManager = null;
@@ -51,50 +51,39 @@ export default class App {
     this.arcadeMenuAudio = new Audio('./assets/sounds/gaming-sounds.mp3');
     this.arcadeMenuAudio.loop = true;
     this.arcadeMenuAudio.volume = 0.6;
-    
+
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
 
-    // ─── STABILITY: EARLIEST POSSIBLE SAFETY TIMEOUT ───────────────────────
-    // This ensures the loader is hidden even if the entire init() hangs.
-    this.safetyTimeout = setTimeout(() => {
-      console.warn('[App] Safety timeout triggered from Constructor. Forcing UI visible.');
-      this.hideLoader();
-    }, 10000);
-
     // EXPOSE FOR GLOBAL CLEANUP (Leaderboard resets)
     window.portfolioApp = this;
-    console.log('[App] Constructor finished.');
   }
 
   /**
    * Initialize all masters and start the loop
    */
   async init() {
-    console.log('[App] init() started.');
-    try {
-      this.projectModal = new ProjectModal(() => {
-        if (this.robot) this.robot.setPresenting(false);
-      });
+    this.projectModal = new ProjectModal(() => {
+      if (this.robot) this.robot.setPresenting(false);
+    });
 
-      renderContent((project, element) => {
-        this.projectModal.open(project, element);
-        if (this.robot) this.robot.setPresenting(true);
-      });
-      console.log('[App] DOM Content Rendered.');
+    renderContent((project, element) => {
+      this.projectModal.open(project, element);
+      if (this.robot) this.robot.setPresenting(true);
+    });
 
-      this.sceneManager = new SceneManager(this.canvas);
-      this.gameManager = new GameManager();
+    this.sceneManager = new SceneManager(this.canvas);
+    this.gameManager = new GameManager();
 
-      // Link gameManager to Arcade texture updates
-      this.gameManager.onUpdateCallback = (canvas) => {
-        if (this.arcade) this.arcade.updateGameTexture(canvas);
-      };
+    // Link gameManager to Arcade texture updates
+    this.gameManager.onUpdateCallback = (canvas) => {
+      if (this.arcade) this.arcade.updateGameTexture(canvas);
+    };
 
     this.gameManager.onGameOver = () => {
       if (this.isGameOverProcessed) return;
       this.isGameOverProcessed = true;
-      
+
       const finalScore = this.gameManager.currentGame?.score;
 
       if (finalScore > 0 && leaderboardMgr.playerName) {
@@ -103,7 +92,7 @@ export default class App {
 
       if (this.arcade && this.arcadeIsOpen && this.gameManager.currentGameId === 'snake') {
         this.arcade.triggerJumpScare(this.sceneManager.cameraCtrl);
-        
+
         if (!document.getElementById('jumpscare-overlay')) {
           const overlay = document.createElement('div');
           overlay.id = 'jumpscare-overlay';
@@ -118,7 +107,7 @@ export default class App {
           overlay.style.alignItems = 'center';
           overlay.style.pointerEvents = 'none';
           overlay.style.zIndex = '99999';
-          
+
           overlay.innerHTML = `
             <style>
               @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
@@ -141,12 +130,12 @@ export default class App {
 
     this.gameManager.onGameRestart = () => {
       this.isGameOverProcessed = false;
-      
+
       if (this.scoreModalTimeout) {
         clearTimeout(this.scoreModalTimeout);
         this.scoreModalTimeout = null;
       }
-      
+
       leaderboardMgr.hideModal();
 
       if (this.arcade) {
@@ -167,15 +156,9 @@ export default class App {
       }
     };
 
-    console.log('[App] Setting up entities & events...');
-    try {
-      this.setupEntities();
-      this.setupEvents();
-      this.loadAssets();
-    } catch (err) {
-      console.error('[App] Setup/Load failure:', err);
-      this.hideLoader(); // Emergency reveal
-    }
+    this.setupEntities();
+    this.setupEvents();
+    this.loadAssets();
   }
 
   setupEntities() {
@@ -191,18 +174,18 @@ export default class App {
   }
 
   loadAssets() {
-    console.log('[App] loadAssets() called.');
-    
+    // Safety Timeout: Force hide loader after 10s if assets hang
+    const safetyTimeout = setTimeout(() => {
+      console.warn('[App] Loading safety timeout reached. Forcing UI...');
+      this.hideLoader();
+    }, 5000);
+
     this.robot.load(MODELS.CHARACTERS.ROBOT, () => {
-      console.log('[App] Robot model loaded.');
-      if (this.safetyTimeout) clearTimeout(this.safetyTimeout);
-      
-      this.arcade.load(MODELS.CHARACTERS.ARCADE, () => {
-        console.log('[App] Arcade model loaded.');
-      });
-      
+      clearTimeout(safetyTimeout);
+      this.arcade.load(MODELS.CHARACTERS.ARCADE);
+
       this.scrollManager = new ScrollManager(
-        this.robot, this.gun, this.mosquito, this.arcade, 
+        this.robot, this.gun, this.mosquito, this.arcade,
         () => this.isGameActive
       );
 
@@ -237,7 +220,7 @@ export default class App {
       this.raycaster.setFromCamera(this.mouse, cam);
       const hits = this.raycaster.intersectObjects(this.arcade.meshes, false);
       const nowHovered = hits.length > 0;
-      
+
       if (nowHovered !== this.arcadeHovered) {
         this.arcadeHovered = nowHovered;
         this.arcade.setHover(this.arcadeHovered, this.sceneManager.outlinePass);
@@ -280,7 +263,7 @@ export default class App {
   handleKeyDown(e) {
     if (this.arcadeIsOpen) {
       this.gameManager.handleInput(e.code);
-      
+
       const blockKeys = ['ArrowUp', 'ArrowDown', 'Space', 'Enter', 'PageUp', 'PageDown'];
       if (blockKeys.includes(e.code)) {
         e.preventDefault();
@@ -296,13 +279,13 @@ export default class App {
     if (this.robot) {
       this.robot.group.visible = false;
     }
-    
+
     clearTimeout(this._arcadeMusicTimeout);
     this._arcadeMusicTimeout = setTimeout(() => {
       if (this.arcadeIsOpen && this.gameManager.isMenuMode && this.arcadeMenuAudio) {
         this.arcadeMenuAudio.play().catch(e => console.warn(e));
       }
-      
+
       leaderboardMgr.setVisible(true);
       leaderboardMgr.incrementPlays();
     }, 1400);
@@ -341,7 +324,7 @@ export default class App {
 
       this.robot.update(dt, elapsed);
       this.arcade.update(dt, this.isArcadeGameRunning);
-      
+
       if (this.isArcadeGameRunning) {
         this.gameManager.update(dt);
       }
@@ -371,7 +354,7 @@ export default class App {
 
       this.sceneManager.render();
       this.gun.renderHUD();
-      
+
       requestAnimationFrame(tick);
     };
 

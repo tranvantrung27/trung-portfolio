@@ -17,17 +17,16 @@
   <link rel="icon" type="image/png" href="/assets/logo/trung.png" />
   <link rel="apple-touch-icon" href="/assets/logo/trung.png" />
 
-  <!-- Import Map: resolve bare specifiers to CDN -->
   <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
-        "three/examples/jsm/loaders/GLTFLoader.js": "https://unpkg.com/three@0.160.1/examples/jsm/loaders/GLTFLoader.js",
-        "gsap": "https://esm.sh/gsap@3.12.5",
-        "gsap/ScrollTrigger": "https://esm.sh/gsap@3.12.5/ScrollTrigger"
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+        "three/examples/jsm/loaders/GLTFLoader.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js",
+        "gsap/ScrollTrigger": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger.js"
       }
     }
-    </script>
+  </script>
 </head>
 
 <body>
@@ -74,6 +73,24 @@
       </svg>
     </div>
   </div>
+
+  <script>
+    // Force hide loader after 8s as ultimate fallback
+    window.addEventListener('load', () => {
+      clearTimeout(window.loaderFallback);
+    });
+    
+    window.loaderFallback = setTimeout(() => {
+      const loader = document.getElementById('loader');
+      if (loader && loader.parentNode) {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          if (loader.parentNode) loader.style.display = 'none';
+        }, 800);
+        console.warn('Loader force hidden by fallback');
+      }
+    }, 8000);
+  </script>
 
   <!-- Mini Game Overlay Prompt (Hidden for now as requested)
   <div id="game-overlay" role="dialog" aria-modal="true" aria-labelledby="game-prompt">
