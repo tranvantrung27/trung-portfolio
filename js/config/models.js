@@ -12,5 +12,6 @@ export const MODELS = {
     ROBOT:          './assets/models/robot_animated.glb',
     MOSQUITO:       './assets/models/mosquito.glb',
     ARCADE:         './assets/models/trung_arcade.glb',
+    SNAKE:          './assets/models/snake.glb',
   }
 };

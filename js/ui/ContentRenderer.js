@@ -3,15 +3,16 @@ import { social, projects, skillGroups, contact, footer } from '../config/conten
 /**
  * Renders all dynamic content from content.js into the DOM.
  * HTML contains only structural shells — data comes from config.
+ * @param {Function} onProjectClick - Callback when a project card is clicked
  */
-export function renderContent() {
-  renderProjects();
+export function renderContent(onProjectClick) {
+  renderProjects(onProjectClick);
   renderSkills();
   renderContact();
   renderFooter();
 }
 
-function renderProjects() {
+function renderProjects(onProjectClick) {
   const grid = document.querySelector('.project-grid');
   if (!grid) return;
   grid.innerHTML = '';
@@ -20,25 +21,39 @@ function renderProjects() {
     const card = document.createElement('div');
     card.className = 'project-card';
     card.style.animationDelay = `${i * 0.1}s`;
+    
+    // Add click listener for the modal
+    card.addEventListener('click', (e) => {
+      // Don't open modal if clicking on a direct link
+      if (e.target.closest('.project-links')) return;
+      if (onProjectClick) onProjectClick(project, card);
+    });
 
     const hasDemo = project.links?.demo;
     const hasGithub = project.links?.github;
     const hasLinks = hasDemo || hasGithub;
 
     card.innerHTML = `
+      <div class="card-corner tl"></div>
+      <div class="card-corner br"></div>
+      <div class="card-glitch-overlay"></div>
+      
       <div class="project-image">
         <img src="${project.image}" alt="${project.title}" loading="lazy" />
+        <div class="image-scanline"></div>
       </div>
+      
       <div class="project-body">
         <div class="project-tags">
-          ${project.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+          ${project.tags.map(t => `<span class="tag"><span class="tag-dot"></span>${t}</span>`).join('')}
         </div>
-        <h3>${project.title}</h3>
+        <h3 class="gradient-text">${project.title}</h3>
         <p>${project.desc}</p>
+        
         ${hasLinks ? `
           <div class="project-links">
-            ${hasDemo ? `<a href="${project.links.demo}" target="_blank" rel="noopener">Xem chi tiết →</a>` : ''}
-            ${hasGithub ? `<a href="${project.links.github}" target="_blank" rel="noopener">GitHub</a>` : ''}
+            ${hasDemo ? `<a href="${project.links.demo}" class="link-btn" target="_blank" rel="noopener">VIEW CASE<span>→</span></a>` : ''}
+            ${hasGithub ? `<a href="${project.links.github}" class="link-github" target="_blank" rel="noopener">GITHUB</a>` : ''}
           </div>
         ` : ''}
       </div>

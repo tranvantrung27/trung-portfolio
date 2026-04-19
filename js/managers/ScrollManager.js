@@ -66,6 +66,14 @@ export class ScrollManager {
       this.gun.disable();
       this.mosquito.disable();
     }
+
+    // Special Entrance Animations
+    if (id === 'projects') {
+      gsap.fromTo('.project-card', 
+        { y: 50, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.8, stagger: 0.15, ease: 'power3.out', delay: 0.2 }
+      );
+    }
   }
 
   updateVisibility(progress) {

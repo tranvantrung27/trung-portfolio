@@ -1,6 +1,20 @@
 #arcade-overlay {
-  display: none; /* reserved for game content later */
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  background: rgba(0,0,0,0.4);
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+#arcade-overlay.visible {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* ── Back button — shown alone after zoom, not tied to overlay ── */

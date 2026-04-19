@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
 import { config } from '../utils/utils.js';
 import { SOUNDS } from '../managers/SoundManager.js';
+import { SnakeJumpScare } from './SnakeJumpScare.js';
 
 const OFF_SCREEN_X = 18; // Far right X — slides off screen to here
 
@@ -12,7 +13,9 @@ export class Arcade {
     this.group = new THREE.Group();
     this.isHome = true;
     this.loaded = false;
-    this.meshes = []; // All meshes — used by OutlinePass
+    this.meshes = [];
+
+    this.jumpScare = new SnakeJumpScare(this.scene);
 
     const homeState = config.arcade.home;
     this.homePos = new THREE.Vector3(...homeState.pos);
@@ -24,6 +27,15 @@ export class Arcade {
     this.group.scale.setScalar(config.arcade.scale);
 
     this.scene.add(this.group);
+
+    // 🔒 ONLY ADDING SCROLL ISOLATION LOGIC
+    this.isOpen = false;
+    this._scrollBlocker = (e) => {
+      if (this.isOpen) {
+        if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
+      }
+    };
   }
 
   load(url, callback) {
@@ -50,45 +62,61 @@ export class Arcade {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
-            if (child.material && child.name.toLowerCase().includes('screen')) {
-              // Create dynamic text texture for the screen
+
+            // 👉 NHẬN DIỆN MÀN HÌNH: Chấp nhận mọi Mesh có chữ 'screen' (không phân biệt hoa thường)
+            const isScreen = child.name.toLowerCase().includes('screen') ||
+              (child.material && child.material.name && child.material.name.toLowerCase().includes('screen'));
+
+            if (isScreen) {
               const canvas = document.createElement('canvas');
               canvas.width = 512;
               canvas.height = 512;
               const ctx = canvas.getContext('2d');
 
-              // Flip the canvas vertically to fix UV orientation from Blender
-              ctx.translate(0, 512);
-              ctx.scale(1, -1);
-
-              // Retro dark background
-              ctx.fillStyle = '#051005';
-              ctx.fillRect(0, 0, 512, 512);
-
-              // Grid / Scanlines
-              ctx.fillStyle = 'rgba(0, 255, 80, 0.15)';
-              for (let i = 0; i < 512; i += 4) ctx.fillRect(0, i, 512, 2);
-
-              // Neon text
-              ctx.fillStyle = '#00ff50';
-              ctx.font = 'bold 50px "Courier New", monospace';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText('Coming soon', 240, 240);
-
               const tex = new THREE.CanvasTexture(canvas);
               if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
-              tex.flipY = false; // Important for GLTF standard
 
-              child.material.map = tex;
-              child.material.emissiveMap = tex;
-              child.material.emissive = new THREE.Color(0xffffff);
-              child.material.emissiveIntensity = 3.0;
+              tex.flipY = true;
+              tex.center.set(0.5, 0.5);
+              tex.rotation = 0;
 
-              // Save reference for blinking
-              this.screenMaterial = child.material;
+              const screenMat = new THREE.MeshBasicMaterial({
+                map: tex,
+                side: THREE.FrontSide,
+                transparent: true,
+                opacity: 1.0,
+                polygonOffset: true,
+                polygonOffsetFactor: -1,
+                polygonOffsetUnits: -1
+              });
+
+              child.material = screenMat;
+              child.renderOrder = 999999;
+
+              this.screenMesh = child;
+              this.screenMaterial = screenMat;
+              this.screenTexture = tex;
+              this.screenCanvas = canvas;
+              this.screenCtx = ctx;
+
+              // 📐 MEASURE SCREEN MESH (As suggested by user)
+              const screenBox = new THREE.Box3().setFromObject(child);
+              const screenSize = new THREE.Vector3();
+              screenBox.getSize(screenSize);
+              const screenCenter = new THREE.Vector3();
+              screenBox.getCenter(screenCenter);
+
+              // Store for calibration
+              this.calibrationData = {
+                width: screenSize.x,
+                height: screenSize.y,
+                center: screenCenter,
+                aspectRatio: screenSize.x / screenSize.y
+              };
+
+              console.log('Arcade Screen Measured:', this.calibrationData);
             }
-            this.meshes.push(child); // Track for outline
+            this.meshes.push(child);
           }
         });
 
@@ -108,11 +136,11 @@ export class Arcade {
         this.group.add(model);
         this.loaded = true;
 
-        // Slide in from the right on first load, ONLY if we are still on the Home section
-        if (this.isHome) {
-          this._slideIn();
-        }
+        // Load snake jump scare via dedicated module
+        const snakeUrl = config.models?.CHARACTERS?.SNAKE || './assets/models/snake.glb';
+        this.jumpScare.load(snakeUrl);
 
+        if (this.isHome) this._slideIn();
         if (callback) callback(this.group);
       },
       null,
@@ -120,14 +148,12 @@ export class Arcade {
     );
   }
 
-  /** Called when entering the HOME section */
   show() {
     if (this.isHome) return;
     this.isHome = true;
     this._slideIn();
   }
 
-  /** Called when leaving the HOME section */
   hide() {
     if (!this.isHome) return;
     this.isHome = false;
@@ -135,7 +161,6 @@ export class Arcade {
   }
 
   _slideIn() {
-    // Animate from off-screen right into home position
     gsap.fromTo(
       this.group.position,
       { x: OFF_SCREEN_X },
@@ -156,7 +181,6 @@ export class Arcade {
   }
 
   _slideOut() {
-    // Slide off to the right, out of view
     gsap.to(this.group.position, {
       x: OFF_SCREEN_X,
       duration: 0.55,
@@ -165,35 +189,25 @@ export class Arcade {
     });
   }
 
-  /**
-   * Toggle the outline glow highlight on hover.
-   * @param {boolean} isHovered
-   * @param {OutlinePass} outlinePass - from sceneManager.outlinePass
-   */
   setHover(isHovered, outlinePass) {
     if (!outlinePass || !this.loaded) return;
     outlinePass.selectedObjects = isHovered ? this.meshes : [];
     document.body.style.cursor = isHovered ? 'pointer' : '';
   }
 
-  /**
-   * Zoom camera into the arcade screen.
-   * Hides UI elements for a cinematic feel.
-   * @param {CameraController} camCtrl
-   */
   openArcade(camCtrl) {
     if (!this.loaded) return;
     this.isOpen = true;
-    document.body.style.overflow = 'hidden'; // Block scrolling while zoomed in
 
-    // Play zoom sound effect
+    // 🔒 LOCK SCROLL
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('wheel', this._scrollBlocker, { passive: false });
+    window.addEventListener('touchmove', this._scrollBlocker, { passive: false });
+
     const zoomSound = new Audio(SOUNDS.SFX.WHOOSH);
     zoomSound.volume = 0.6;
     zoomSound.play().catch(e => console.warn('Could not play zoom sound:', e));
 
-    // ─ Camera: zoom close in front of the screen ─
-    // Directly track position to avoid lerp lag spin
-    // Stand slighly further back so the machine isn't too huge
     gsap.to(camCtrl.targetPos, {
       x: 5.5, y: 0.0, z: -1.5,
       duration: 1.4,
@@ -206,7 +220,6 @@ export class Arcade {
       ease: 'power3.inOut',
     });
 
-    // Narrow FOV slightly (45 → 35 instead of 28 so it's not too tight)
     gsap.to(camCtrl.camera, {
       fov: 30,
       duration: 1.4,
@@ -214,21 +227,18 @@ export class Arcade {
       onUpdate: () => camCtrl.camera.updateProjectionMatrix(),
     });
 
-    // Hide hero content and scroll indicator
     gsap.to(['.hero-content', '.scroll-indicator'], {
       opacity: 0, y: -20,
       duration: 0.4, ease: 'power2.in',
       pointerEvents: 'none',
     });
 
-    // Slide navbar up
     gsap.to('#navbar', {
       y: -80,
       duration: 0.4,
       ease: 'power2.in',
     });
 
-    // Show back button after zoom completes
     setTimeout(() => {
       const btn = document.getElementById('arcade-close');
       if (btn) {
@@ -242,32 +252,27 @@ export class Arcade {
     }, 1200);
   }
 
-  /**
-   * Zoom camera back out and restore all UI.
-   * @param {CameraController} camCtrl
-   * @param {Object} homeTarget
-   * @param {Object} homeLookAt
-   * @param {Function} onComplete
-   */
   closeArcade(camCtrl, homeTarget, homeLookAt, onComplete) {
     this.isOpen = false;
+    this.resetJumpScare(); // <--- HIDE SNAKE WHEN ARCADE CLOSES
 
-    // Play zoom out sound effect
+    // 🔓 RELEASE SCROLL
+    document.body.style.overflow = '';
+    window.removeEventListener('wheel', this._scrollBlocker);
+    window.removeEventListener('touchmove', this._scrollBlocker);
+
     const backSound = new Audio(SOUNDS.SFX.WHOOSH);
     backSound.volume = 0.6;
     backSound.play().catch(e => console.warn('Could not play back sound:', e));
 
-    // Hide back button
     const btn = document.getElementById('arcade-close');
     if (btn) {
       btn.style.opacity = '0';
       setTimeout(() => { btn.style.display = 'none'; }, 400);
     }
 
-    // Restore scrolling immediately
     document.body.style.overflow = '';
 
-    // Restore camera position using precise home coordinates
     gsap.to(camCtrl.targetPos, {
       x: homeTarget ? homeTarget.x : 0.5,
       y: homeTarget ? homeTarget.y : 1.0,
@@ -285,21 +290,18 @@ export class Arcade {
       }
     });
 
-    // Restore FOV
     gsap.to(camCtrl.camera, {
       fov: config.camera?.fov ?? 45,
       duration: 1.4, ease: 'power3.inOut',
       onUpdate: () => camCtrl.camera.updateProjectionMatrix(),
     });
 
-    // Restore hero content
     gsap.to(['.hero-content', '.scroll-indicator'], {
       opacity: 1, y: 0,
       duration: 0.5, ease: 'power2.out',
       delay: 0.3,
     });
 
-    // Restore navbar
     gsap.to('#navbar', {
       y: 0,
       duration: 0.4, ease: 'power2.out',
@@ -307,25 +309,48 @@ export class Arcade {
     });
   }
 
-  // GSAP handles zoom animation, but we handle screen blinking here
-  update(dt) {
+  updateGameTexture(gameCanvas) {
+    if (!this.screenCtx || !this.loaded) return;
+
+    // 1. Solid Retro Background
+    this.screenCtx.fillStyle = '#010501';
+    this.screenCtx.fillRect(0, 0, 512, 512);
+
+    // 2. Draw Game Canvas to exact physical UV mapped bounds
+    // Based on diagnostic measuring, the physical screen only maps 
+    // the texture from Y=200 to Y=505.
+    const finalX = 0;
+    const finalY = 200;
+    const finalW = 512;
+    const finalH = 305;
+
+    this.screenCtx.drawImage(gameCanvas, finalX, finalY, finalW, finalH);
+    this.screenTexture.needsUpdate = true;
+  }
+
+  triggerJumpScare(camCtrl) {
+    this.jumpScare.trigger(camCtrl, this.screenMesh, this.group);
+  }
+
+  resetJumpScare() {
+    this.jumpScare.reset();
+  }
+
+  update(dt, isGameRunning = false) {
+    this.jumpScare.update(dt);
     if (!this.screenMaterial) return;
 
-    // Stop blinking and leave screen fully on if zoomed in
-    if (this.isOpen) {
+    if (isGameRunning || this.isOpen) {
       this.screenMaterial.emissiveIntensity = 3.5;
       return;
     }
 
     this.time = (this.time || 0) + dt;
-
-    // Blink effect: 0.8s bright, 0.4s dim
     const cycle = this.time % 1.2;
     if (cycle < 0.8) {
-      this.screenMaterial.emissiveIntensity = 3.5; // On
+      this.screenMaterial.emissiveIntensity = 3.5;
     } else {
-      this.screenMaterial.emissiveIntensity = 0.5; // Off
+      this.screenMaterial.emissiveIntensity = 0.5;
     }
   }
-
 }

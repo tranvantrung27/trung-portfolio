@@ -55,9 +55,19 @@
 }
 
 @keyframes scrollAnim {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(0); }
-  30%  { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(16px); }
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
 }
 
 .scroll-label {

@@ -10,10 +10,45 @@ export function createScene() {
 
   scene.background = null;
   scene.environment = new THREE.Color(0x222233);
-  scene.fog = new THREE.FogExp2(0x0f172a, 0.035);
+  // Thêm Fog (Sương mù) để tạo chiều sâu tinh tế hơn
+  scene.fog = new THREE.FogExp2(0x0a0f1d, 0.04);
 
   const ambient = new THREE.AmbientLight(config.lighting.ambient.color, config.lighting.ambient.intensity);
   scene.add(ambient);
+
+  // ─── Grid (Mặt đất công nghệ) ───────────────────────────────────────────
+  // Tạo hiệu ứng lưới neon bên dưới chân robot
+  // Đổi màu vạch trung tâm (0x6366f1 -> 0x334155) để nó mờ đi theo ý bạn
+  const gridHelper = new THREE.GridHelper(50, 50, 0x334155, 0x1e293b);
+  gridHelper.position.y = -1.21; // Đặt thấp hơn robot một chút
+  gridHelper.material.transparent = true;
+  gridHelper.material.opacity = 0.12;
+  scene.add(gridHelper);
+
+  // ─── Particles (Hệ thống hạt sáng lơ lửng) ─────────────────────────────
+  const particlesGeometry = new THREE.BufferGeometry();
+  const count = 3000;
+  const positions = new Float32Array(count * 3);
+
+  for (let i = 0; i < count * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 40; // Phân bố đốm sáng trong không gian
+  }
+
+  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  const particlesMaterial = new THREE.PointsMaterial({
+    size: 0.02,
+    color: 0x6366f1,
+    transparent: true,
+    opacity: 0.4,
+    sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+  scene.add(particlesMesh);
+  // Lưu particles vào scene để có thể animate trong tick loop nếu cần
+  scene.userData.particles = particlesMesh;
 
   const keyLight = new THREE.DirectionalLight(config.lighting.key.color, config.lighting.key.intensity);
   keyLight.position.set(...config.lighting.key.pos);

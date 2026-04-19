@@ -16,6 +16,7 @@
 @import './css/components/navbar.css';
 @import './css/components/game-hud.css';
 @import './css/components/arcade-overlay.css';
+@import './css/components/project-modal.css';
 @import './css/components/robot-chat.css';
 
 /* Sections */

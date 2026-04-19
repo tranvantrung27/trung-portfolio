@@ -16,6 +16,8 @@ export class Robot {
     this.targetScale = config.robot.scale;
     this.waveMeshes = new Array(7).fill(null);
     this.antennaMesh = null;
+    this.mouseTarget = new THREE.Vector2(0, 0);
+    this.isPresenting = false;
 
     this.group.position.set(...config.robot.states.home.pos);
     this.group.rotation.y = config.robot.states.home.rotY;
@@ -71,6 +73,7 @@ export class Robot {
       this.group.add(model);
 
       if (gltf.animations && gltf.animations.length > 0) {
+        console.log(`Robot Animations:`, gltf.animations.map(a => a.name));
         this.mixer = new THREE.AnimationMixer(model);
         this.mixer.clipAction(gltf.animations[0]).play();
       }
@@ -98,23 +101,38 @@ export class Robot {
     }
   }
 
+  setPresenting(isPresenting) {
+    this.isPresenting = isPresenting;
+  }
+
+  setMouseTarget(x, y) {
+    this.mouseTarget.set(x, y);
+  }
+
   update(dt, elapsedTime) {
     if (this.mixer) this.mixer.update(dt);
     
     // Smooth transitions
     this.group.position.lerp(this.targetPos, 3 * dt);
-    this.group.rotation.y += (this.targetRotY - this.group.rotation.y) * 3 * dt;
+    
+    // Combine base state rotation with subtle mouse tracking
+    const mouseInfluence = this.isPresenting ? 0.05 : 0.25; 
+    const presentationRot = this.isPresenting ? 0 : 0; // If presenting, stay centered
+    const baseRot = this.isPresenting ? 0 : this.targetRotY;
+
+    const finalRotY = baseRot + (this.mouseTarget.x * mouseInfluence);
+    
+    this.group.rotation.y += (finalRotY - this.group.rotation.y) * 3 * dt;
+    
+    // Subtle tilt based on vertical mouse
+    const tiltInfluence = this.isPresenting ? 0.02 : 0.1;
+    this.group.rotation.x += (-this.mouseTarget.y * tiltInfluence - this.group.rotation.x) * 3 * dt;
+
     this.group.scale.lerp(new THREE.Vector3().setScalar(this.targetScale), 3 * dt);
     
-    // Opacity remains 1.0 to keep robot "solid"
-    this.currentOpacity = 1.0;
-    this.group.traverse(child => {
-      if (child.isMesh && child.material) {
-        child.material.opacity = this.currentOpacity;
-      }
-    });
-
-    this.group.position.y = this.targetPos.y + Math.sin(elapsedTime * config.robot.floatSpeed) * config.robot.floatAmplitude;
+    // Floating logic - stabilize if presenting
+    const floatAmp = this.isPresenting ? config.robot.floatAmplitude * 0.3 : config.robot.floatAmplitude;
+    this.group.position.y = this.targetPos.y + Math.sin(elapsedTime * config.robot.floatSpeed) * floatAmp;
     this.targetRotY += config.robot.idleRotateSpeed;
 
     // --- Wave segment Battery Charging effect ---
