@@ -55,30 +55,41 @@ export default class App {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
 
+    // ─── STABILITY: EARLIEST POSSIBLE SAFETY TIMEOUT ───────────────────────
+    // This ensures the loader is hidden even if the entire init() hangs.
+    this.safetyTimeout = setTimeout(() => {
+      console.warn('[App] Safety timeout triggered from Constructor. Forcing UI visible.');
+      this.hideLoader();
+    }, 10000);
+
     // EXPOSE FOR GLOBAL CLEANUP (Leaderboard resets)
     window.portfolioApp = this;
+    console.log('[App] Constructor finished.');
   }
 
   /**
    * Initialize all masters and start the loop
    */
   async init() {
-    this.projectModal = new ProjectModal(() => {
-      if (this.robot) this.robot.setPresenting(false);
-    });
+    console.log('[App] init() started.');
+    try {
+      this.projectModal = new ProjectModal(() => {
+        if (this.robot) this.robot.setPresenting(false);
+      });
 
-    renderContent((project, element) => {
-      this.projectModal.open(project, element);
-      if (this.robot) this.robot.setPresenting(true);
-    });
-    
-    this.sceneManager = new SceneManager(this.canvas);
-    this.gameManager = new GameManager();
+      renderContent((project, element) => {
+        this.projectModal.open(project, element);
+        if (this.robot) this.robot.setPresenting(true);
+      });
+      console.log('[App] DOM Content Rendered.');
 
-    // Link gameManager to Arcade texture updates
-    this.gameManager.onUpdateCallback = (canvas) => {
-      if (this.arcade) this.arcade.updateGameTexture(canvas);
-    };
+      this.sceneManager = new SceneManager(this.canvas);
+      this.gameManager = new GameManager();
+
+      // Link gameManager to Arcade texture updates
+      this.gameManager.onUpdateCallback = (canvas) => {
+        if (this.arcade) this.arcade.updateGameTexture(canvas);
+      };
 
     this.gameManager.onGameOver = () => {
       if (this.isGameOverProcessed) return;
@@ -156,9 +167,15 @@ export default class App {
       }
     };
 
-    this.setupEntities();
-    this.setupEvents();
-    this.loadAssets();
+    console.log('[App] Setting up entities & events...');
+    try {
+      this.setupEntities();
+      this.setupEvents();
+      this.loadAssets();
+    } catch (err) {
+      console.error('[App] Setup/Load failure:', err);
+      this.hideLoader(); // Emergency reveal
+    }
   }
 
   setupEntities() {
@@ -174,15 +191,15 @@ export default class App {
   }
 
   loadAssets() {
-    // Safety Timeout: Force hide loader after 10s if assets hang
-    const safetyTimeout = setTimeout(() => {
-      console.warn('[App] Loading safety timeout reached. Forcing UI...');
-      this.hideLoader();
-    }, 10000);
-
+    console.log('[App] loadAssets() called.');
+    
     this.robot.load(MODELS.CHARACTERS.ROBOT, () => {
-      clearTimeout(safetyTimeout);
-      this.arcade.load(MODELS.CHARACTERS.ARCADE);
+      console.log('[App] Robot model loaded.');
+      if (this.safetyTimeout) clearTimeout(this.safetyTimeout);
+      
+      this.arcade.load(MODELS.CHARACTERS.ARCADE, () => {
+        console.log('[App] Arcade model loaded.');
+      });
       
       this.scrollManager = new ScrollManager(
         this.robot, this.gun, this.mosquito, this.arcade, 
