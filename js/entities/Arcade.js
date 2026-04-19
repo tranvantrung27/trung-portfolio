@@ -60,11 +60,12 @@ export class Arcade {
 
         model.traverse((child) => {
           if (child.isMesh) {
+            const lowerName = child.name.toLowerCase();
             child.castShadow = true;
             child.receiveShadow = true;
 
             // 👉 NHẬN DIỆN MÀN HÌNH: Chấp nhận mọi Mesh có chữ 'screen' (không phân biệt hoa thường)
-            const isScreen = child.name.toLowerCase().includes('screen') ||
+            const isScreen = lowerName.includes('screen') ||
               (child.material && child.material.name && child.material.name.toLowerCase().includes('screen'));
 
             if (isScreen) {

@@ -174,7 +174,14 @@ export default class App {
   }
 
   loadAssets() {
+    // Safety Timeout: Force hide loader after 10s if assets hang
+    const safetyTimeout = setTimeout(() => {
+      console.warn('[App] Loading safety timeout reached. Forcing UI...');
+      this.hideLoader();
+    }, 10000);
+
     this.robot.load(MODELS.CHARACTERS.ROBOT, () => {
+      clearTimeout(safetyTimeout);
       this.arcade.load(MODELS.CHARACTERS.ARCADE);
       
       this.scrollManager = new ScrollManager(

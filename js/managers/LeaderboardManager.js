@@ -22,17 +22,29 @@ class LeaderboardManager {
       measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
     };
 
-    // Initialize Firebase
-    this.app = initializeApp(this.firebaseConfig);
-    this.db = getFirestore(this.app);
-    this.auth = getAuth(this.app);
-    
-    this.user = null;
-    this.scores = [];
-    this.personalBest = 0;
-    this.userRank = "--";
-    this.playerName = null;
-    this._initialized = false;
+    this.firebaseDisabled = false;
+
+    // Initialize Firebase gracefully
+    try {
+      if (!this.firebaseConfig.apiKey) {
+        throw new Error("Missing Firebase API Key. Leaderboard disabled.");
+      }
+      this.app = initializeApp(this.firebaseConfig);
+      this.db = getFirestore(this.app);
+      this.auth = getAuth(this.app);
+      
+      this.user = null;
+      this.scores = [];
+      this.personalBest = 0;
+      this.userRank = "--";
+      this.playerName = null;
+      this._initialized = true;
+
+      this.setupAuth();
+    } catch (err) {
+      console.warn("[Leaderboard] Initialization failed:", err.message);
+      this.firebaseDisabled = true;
+    }
 
     // UI Elements
     this.ui = {
