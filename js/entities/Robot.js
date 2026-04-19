@@ -73,7 +73,6 @@ export class Robot {
       this.group.add(model);
 
       if (gltf.animations && gltf.animations.length > 0) {
-        console.log(`Robot Animations:`, gltf.animations.map(a => a.name));
         this.mixer = new THREE.AnimationMixer(model);
         this.mixer.clipAction(gltf.animations[0]).play();
       }

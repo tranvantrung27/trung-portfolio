@@ -9,6 +9,7 @@ import { ScrollManager } from './managers/ScrollManager.js';
 import { UIManager } from './ui/Navbar.js';
 import { renderContent } from './ui/ContentRenderer.js';
 import { RobotChat } from './ui/RobotChat.js';
+import { leaderboardMgr } from './managers/LeaderboardManager.js';
 import { ProjectModal } from './ui/ProjectModal.js';
 import { GameManager } from './games/GameManager.js';
 import { config } from './utils/utils.js';
@@ -43,6 +44,8 @@ export default class App {
     this.arcadeIsOpen = false;
     this.isArcadeGameRunning = true;
     this.arcadeHovered = false;
+    this.isGameOverProcessed = false;
+    this.scoreModalTimeout = null; // Quản lý timeout của bảng điểm
 
     // Nhạc nền phòng Arcade (Chỉ kêu khi giao diện ở Menu Game)
     this.arcadeMenuAudio = new Audio('./assets/sounds/gaming-sounds.mp3');
@@ -51,6 +54,9 @@ export default class App {
     
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
+
+    // EXPOSE FOR GLOBAL CLEANUP (Leaderboard resets)
+    window.portfolioApp = this;
   }
 
   /**
@@ -75,11 +81,18 @@ export default class App {
     };
 
     this.gameManager.onGameOver = () => {
-      console.log('[App] onGameOver fired! arcadeIsOpen=', this.arcadeIsOpen);
+      if (this.isGameOverProcessed) return;
+      this.isGameOverProcessed = true;
+      
+      const finalScore = this.gameManager.currentGame?.score;
+
+      if (finalScore > 0 && leaderboardMgr.playerName) {
+        leaderboardMgr.saveScoreSilently(finalScore);
+      }
+
       if (this.arcade && this.arcadeIsOpen && this.gameManager.currentGameId === 'snake') {
         this.arcade.triggerJumpScare(this.sceneManager.cameraCtrl);
         
-        // Hiện bảng GAME OVER đè lên trước mặt con rắn (DOM Overlay)
         if (!document.getElementById('jumpscare-overlay')) {
           const overlay = document.createElement('div');
           overlay.id = 'jumpscare-overlay';
@@ -92,7 +105,7 @@ export default class App {
           overlay.style.flexDirection = 'column';
           overlay.style.justifyContent = 'center';
           overlay.style.alignItems = 'center';
-          overlay.style.pointerEvents = 'none'; // Không cản click/phím
+          overlay.style.pointerEvents = 'none';
           overlay.style.zIndex = '99999';
           
           overlay.innerHTML = `
@@ -104,25 +117,38 @@ export default class App {
           `;
           document.body.appendChild(overlay);
         }
+
+        if (finalScore > 0 && !leaderboardMgr.playerName) {
+          this.scoreModalTimeout = setTimeout(() => {
+            if (this.arcadeIsOpen) {
+              leaderboardMgr.showSubmitModal();
+            }
+          }, 2500);
+        }
       }
     };
 
     this.gameManager.onGameRestart = () => {
+      this.isGameOverProcessed = false;
+      
+      if (this.scoreModalTimeout) {
+        clearTimeout(this.scoreModalTimeout);
+        this.scoreModalTimeout = null;
+      }
+      
+      leaderboardMgr.hideModal();
+
       if (this.arcade) {
         this.arcade.resetJumpScare();
       }
-      // Dọn dẹp bảng Game Over
       const overlay = document.getElementById('jumpscare-overlay');
       if (overlay) overlay.remove();
     };
 
-    // --- XỬ LÝ NHẠC NỀN ARCADE ---
-    // Khi Load 1 Game cụ thể (Tetris, Snake...) -> Tắt nhạc nền menu
     this.gameManager.onGameLoad = (gameId) => {
       if (this.arcadeMenuAudio) this.arcadeMenuAudio.pause();
     };
 
-    // Khi thoát khỏi Game (nhấn ESC hoặc Game Over out ra) -> Bật lại nhạc menu
     this.gameManager.onGameExit = () => {
       if (this.arcadeMenuAudio && this.arcadeIsOpen) {
         this.arcadeMenuAudio.currentTime = 0;
@@ -144,7 +170,7 @@ export default class App {
     this.gun = new Gun(renderer, cam);
     this.mosquito = new Mosquito(scene, cam);
     this.arcade = new Arcade(scene);
-    window.arcade = this.arcade; // Legacy support for gameManager callback
+    window.arcade = this.arcade;
   }
 
   loadAssets() {
@@ -171,7 +197,6 @@ export default class App {
     window.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
     window.addEventListener('keydown', (e) => this.handleKeyDown(e));
 
-    // Arcade Close Interaction
     document.getElementById('arcade-close')?.addEventListener('click', () => this.closeArcade());
   }
 
@@ -180,7 +205,6 @@ export default class App {
     const ny = -(e.clientY / window.innerHeight) * 2 + 1;
     this.mouse.set(nx, ny);
 
-    // Dynamic Robot look-at
     if (this.robot) this.robot.setMouseTarget(nx, ny);
 
     const cam = this.sceneManager.cameraCtrl.camera;
@@ -233,17 +257,6 @@ export default class App {
     if (this.arcadeIsOpen) {
       this.gameManager.handleInput(e.code);
       
-      // Reset jump scare if game starts or restarts
-      const isEnterOrSpace = e.code === 'Space' || e.code === 'Enter';
-      const isGameOver = this.gameManager.currentGame && this.gameManager.currentGame.isGameOver;
-      const isMenu = this.gameManager.isMenuMode;
-
-      if (isEnterOrSpace && (isGameOver || isMenu)) {
-        // TẠM TẮT TỰ ĐỘNG RESET: 
-        // if (this.arcade) this.arcade.resetJumpScare();
-      }
-
-      // Block common keys from scrolling the page
       const blockKeys = ['ArrowUp', 'ArrowDown', 'Space', 'Enter', 'PageUp', 'PageDown'];
       if (blockKeys.includes(e.code)) {
         e.preventDefault();
@@ -255,15 +268,20 @@ export default class App {
     this.arcadeIsOpen = true;
     this.isArcadeGameRunning = true;
     this.arcade.openArcade(this.sceneManager.cameraCtrl);
+
+    if (this.robot) {
+      this.robot.group.visible = false;
+    }
     
-    // Đợi âm thanh Whoosh__.mp3 và hiệu ứng Zoom hoàn tất (1.4s) mới bật loa nền
     clearTimeout(this._arcadeMusicTimeout);
     this._arcadeMusicTimeout = setTimeout(() => {
-      // Nhỡ khách vừa bấm mở lại bấm đóng luôn thì không được bật nhạc
       if (this.arcadeIsOpen && this.gameManager.isMenuMode && this.arcadeMenuAudio) {
         this.arcadeMenuAudio.play().catch(e => console.warn(e));
       }
-    }, 1400); // 1.4 giây = Thời lượng GSAP Zoom của Arcade
+      
+      leaderboardMgr.setVisible(true);
+      leaderboardMgr.incrementPlays();
+    }, 1400);
   }
 
   closeArcade() {
@@ -273,21 +291,23 @@ export default class App {
 
     this.arcade.closeArcade(this.sceneManager.cameraCtrl, homeTarget, homeLookAt, () => {
       this.arcadeIsOpen = false;
-      gsap.to('#arcade-overlay', { opacity: 1, duration: 0.4, pointerEvents: 'auto' });
+      if (this.robot) {
+        this.robot.group.visible = true;
+      }
     });
 
-    // Thu hồi Jumpscare và xóa bảng Game Over nếu người chơi bỏ chạy!
     if (this.arcade) {
       this.arcade.resetJumpScare();
     }
     const overlay = document.getElementById('jumpscare-overlay');
     if (overlay) overlay.remove();
 
-    // Hủy lệnh hẹn giờ bật nhạc (nếu đang zoom lỡ dở) và tắt nhạc nếu đang chạy
     clearTimeout(this._arcadeMusicTimeout);
     if (this.arcadeMenuAudio) {
       this.arcadeMenuAudio.pause();
     }
+
+    leaderboardMgr.setVisible(false);
   }
 
   startLoop() {
@@ -295,7 +315,6 @@ export default class App {
       const dt = this.clock.getDelta();
       const elapsed = this.clock.elapsedTime;
 
-      // Update Entities
       this.robot.update(dt, elapsed);
       this.arcade.update(dt, this.isArcadeGameRunning);
       
@@ -308,7 +327,6 @@ export default class App {
         this.mosquito.update(dt);
       }
 
-      // Camera Follow
       if (!this.arcadeIsOpen) {
         const rp = this.robot.group.position;
         this.sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);

@@ -51,7 +51,7 @@ export class SnakeJumpScare {
       const rawScale = maxDim > 0 ? TARGET_SIZE / maxDim : 0.001;
       this.baseScale = Math.max(0.00001, Math.min(rawScale, 100));
 
-      console.log(`[SnakeJumpScare] baseScale=${this.baseScale.toExponential(3)}`);
+
 
       this.model.scale.setScalar(0);
 
@@ -74,11 +74,11 @@ export class SnakeJumpScare {
       if (onLoaded) onLoaded();
     },
       undefined,
-      (err) => console.error('[SnakeJumpScare] Load error:', err));
+      (err) => {});
   }
 
   trigger(camCtrl, screenMesh, arcadeGroup) {
-    if (!this.model) { console.warn('[SnakeJumpScare] trigger() called but model not loaded yet'); return; }
+    if (!this.model) { return; }
 
     // Đã bấm J là Reset lại để xem!
     this.reset();
@@ -161,10 +161,10 @@ export class SnakeJumpScare {
     if (this.scareAudio) {
       this.scareAudio.currentTime = 0; // Chơi từ đầu
       this.scareAudio.volume = 1.0; // Max Volume
-      this.scareAudio.play().catch(e => console.warn("Browser blocked audio autoplay", e));
+      this.scareAudio.play().catch(e => {});
     }
 
-    console.log('[SnakeJumpScare] Triggered at relative front of camera.');
+
   }
 
   /**

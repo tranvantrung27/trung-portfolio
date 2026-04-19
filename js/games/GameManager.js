@@ -1,4 +1,5 @@
 import { Snake } from './Snake.js';
+import { leaderboardMgr } from '../managers/LeaderboardManager.js';
 
 /**
  * GameManager — Controls the Arcade state and current game instance.

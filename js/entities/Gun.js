@@ -86,7 +86,6 @@ export class Gun {
         // Muzzle detection
         if (node.name.toLowerCase().includes('muzzle')) {
           this.muzzle = node;
-          console.log('✅ Found muzzle:', node.name);
         }
 
         if (!node.isMesh) return;
@@ -117,7 +116,6 @@ export class Gun {
 
       this.modelWrapper.visible = false;
       this.loaded = true;
-      console.log('Gun: Model loaded. Muzzle ready.');
     });
   }
 

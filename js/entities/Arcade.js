@@ -114,9 +114,10 @@ export class Arcade {
                 aspectRatio: screenSize.x / screenSize.y
               };
 
-              console.log('Arcade Screen Measured:', this.calibrationData);
+              if (this.calibrationData.width > 0) {
+                this.isCalibrated = true;
+              }
             } else {
-              // Bắt lấy Material chữ TRUNG ('Material.005' hoặc mesh 'Text.001')
               const mat = Array.isArray(child.material) ? child.material[0] : child.material;
               const isMarquee = (mat && mat.name === 'Material.005') || child.name.includes('Text.001');
 
@@ -127,11 +128,11 @@ export class Arcade {
                   child.material = child.material.clone();
                 }
                 this.marqueeMaterial = Array.isArray(child.material) ? child.material[0] : child.material;
-                // Màu xanh Neon cực mạnh (Vibrant Green)
                 this.marqueeMaterial.emissive = new THREE.Color('#33ff77');
-                this.marqueeMaterial.emissiveIntensity = 5.0; // Tăng mạnh độ rực
-                this.marqueeMaterial.needsUpdate = true;
-                console.log("✅ Marquee targeted via:", child.name);
+                this.marqueeMaterial.emissiveIntensity = 5.0;
+                if (lowerName.includes('marquee')) {
+                  this.marqueeMesh = child;
+                }
               }
             }
             this.meshes.push(child);

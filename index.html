@@ -11,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./css/components/leaderboard.css" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/logo/trung.png" />
+  <link rel="apple-touch-icon" href="/assets/logo/trung.png" />
 
   <!-- Import Map: resolve bare specifiers to CDN -->
   <script type="importmap">
@@ -63,13 +68,7 @@
     <canvas id="loader-canvas"></canvas>
     <div class="loader-content">
       <svg class="loader-logo" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <text 
-          x="50%" 
-          y="60%" 
-          dominant-baseline="middle" 
-          text-anchor="middle" 
-          class="logo-text-animated"
-        >
+        <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" class="logo-text-animated">
           Trung.
         </text>
       </svg>
@@ -101,6 +100,41 @@
       <li><a href="#contact" class="nav-link">Contact</a></li>
     </ul>
   </nav>
+
+  <!-- Arcade Leaderboard Sidebar (Left) -->
+  <div id="arcade-leaderboard" class="arcade-side-panel">
+    <div class="panel-header">
+      <div class="live-indicator">LIVE</div>
+      <h3>TOP SNAKE KINGS</h3>
+    </div>
+    <div class="stat-row">
+      <span>Total Plays:</span>
+      <span id="total-plays">...</span>
+    </div>
+    <div id="leaderboard-list">
+      <div class="loading-leaderboard">Loading rankings...</div>
+    </div>
+    <div id="user-status-row" class="user-status hidden">
+      <span class="rank">#--</span>
+      <span class="name">YOU</span>
+      <span class="score">0</span>
+    </div>
+  </div>
+
+  <!-- Score Submission Modal -->
+  <div id="score-modal" class="modal-overlay hidden">
+    <div class="modal-content neon-border">
+      <h2>NEW HIGH SCORE!</h2>
+      <p>Enter your nickname to join the legends</p>
+      <input type="text" id="player-name" maxlength="10" placeholder="AAA" autocomplete="off" />
+      <div id="profanity-warning" class="error-text hidden">Please avoid inappropriate language.</div>
+      <div class="modal-actions">
+        <button id="btn-submit-score" class="btn-neon primary">SUBMIT</button>
+        <button id="btn-skip-score" class="btn-neon gray">SKIP</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Canvas Background (Robot renders here) -->
   <canvas id="bg"></canvas>
