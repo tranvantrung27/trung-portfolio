@@ -168,6 +168,22 @@ export class Arcade {
     );
   }
 
+  handleResponsiveLayout(factor) {
+    if (!this.loaded) return;
+
+    // Base home X is 6.5
+    const baseHomeX = config.arcade.home.pos[0];
+    const newHomeX = baseHomeX * factor;
+    
+    this.homePos.x = newHomeX;
+
+    // If we are currently in the home state (sliding in or already in)
+    // Update the position immediately so it stays responsive during resize
+    if (this.isHome && !this.isOpen) {
+      this.group.position.x = newHomeX;
+    }
+  }
+
   show() {
     if (this.isHome) return;
     this.isHome = true;

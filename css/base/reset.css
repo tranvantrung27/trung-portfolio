@@ -50,14 +50,26 @@ body::before {
   pointer-events: none;
 }
 
-/* CANVAS — 3D Background Layer */
-canvas {
+/* CANVAS — 3D Background Layer (Robot/Arcade) */
+canvas#bg {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
+}
+
+/* CANVAS — 3D Foreground Layer (Gestures/Particles) */
+canvas#fg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block; /* prevents gap under canvas affecting getBoundingClientRect */
+  z-index: 1000;
+  pointer-events: none;
 }
 
 /* MAIN OVERLAY — Content Layer */

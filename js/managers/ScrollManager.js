@@ -11,18 +11,19 @@ gsap.registerPlugin(ScrollTrigger);
  * @param {Function} isGameActive - getter fn returning current game state flag
  */
 export class ScrollManager {
-  constructor(robot, gun, mosquito, arcade, isGameActive) {
+  constructor(robot, gun, mosquito, arcade, isGameActive, app) {
     this.robot = robot;
     this.gun = gun;
     this.mosquito = mosquito;
     this.arcade = arcade;
     this.isGameActive = isGameActive; // Getter fn, e.g. () => isGameActive
+    this.app = app;
     this.currentState = 'home';
     this.init();
   }
 
   init() {
-    ['home', 'projects', 'skills', 'contact'].forEach((id) => {
+    ['home', 'about', 'projects', 'skills', 'contact'].forEach((id) => {
       ScrollTrigger.create({
         trigger: `#${id}`,
         start: 'top center',
@@ -65,6 +66,19 @@ export class ScrollManager {
       // Always disable HUD when leaving HOME — stops sounds, rendering & listeners
       this.gun.disable();
       this.mosquito.disable();
+    }
+
+    // AI UI Container visibility (Only show on 'about' section)
+    const aiUIContainer = document.getElementById('ai-ui-container');
+    if (aiUIContainer) {
+      if (id === 'about') {
+        aiUIContainer.classList.add('visible');
+      } else {
+        aiUIContainer.classList.remove('visible');
+        if (this.app && this.app.isAIActive) {
+          this.app.toggleAI();
+        }
+      }
     }
 
     // Special Entrance Animations

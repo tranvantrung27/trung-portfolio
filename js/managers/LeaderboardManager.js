@@ -81,6 +81,14 @@ class LeaderboardManager {
   setupModal() {
     this.ui.submitBtn?.addEventListener('click', () => this.handleSubmit());
     this.ui.skipBtn?.addEventListener('click', () => this.hideModal());
+    
+    // Allow pressing Enter to submit
+    this.ui.nameInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault(); // Prevent accidental form submission or focus jump
+        this.handleSubmit();
+      }
+    });
   }
 
   /**

@@ -1,57 +1,103 @@
 /* ========================================
-   NAVBAR
+   NAVBAR - PERFECTED (SVG LOGO | TIGHT PILL)
    ======================================== */
 nav {
   position: fixed;
-  top: 0;
-  width: 100%;
-  height: 64px; /* Slimmed down from 80px for a sleeker look */
-  padding: 0 8%;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  max-width: fit-content; /* Allow container to wrap around content */
+  height: 64px;
+  padding: 0 40px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center the whole group */
   align-items: center;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  background: rgba(10, 10, 15, 0.7);
-  border-bottom: 1px solid var(--border);
-  z-index: 10;
+  gap: 24px; /* Fixed equal gap for both sides */
+  z-index: 1000;
+  pointer-events: none;
+  transition: all var(--transition-normal);
+}
+
+.nav-left, .nav-center, .nav-right {
+  display: flex;
+  align-items: center;
   pointer-events: auto;
 }
 
-.logo {
-  font-family: 'AirTravelers';
-  font-size: 1.8rem; /* Reduced for the slimmer navbar */
-  line-height: 0.8;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  user-select: none;
-  position: relative;
+/* Removed flex: 1 to ensure gaps are identical */
+.nav-center { 
+  justify-content: center; 
 }
 
-.logo::after {
-  content: "";
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  background-color: #fff;
-  border-radius: 50%;
-  margin-left: 6px;
-  margin-top: 10px; /* Offset to align with the bottom of the script font */
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+
+/* Central Glass Pill */
+.nav-pill {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(10, 10, 15, 0.4);
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.05), 
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-pill);
+  padding: 8px 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-normal);
+}
+
+.nav-pill:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* SVG Logo Styling - 100% Match with Loader */
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none !important;
+  transition: transform var(--transition-fast);
+}
+
+.logo:hover {
+  transform: scale(1.1);
+}
+
+.nav-logo-svg {
+  width: 150px; /* Larger logo size */
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.3));
+}
+
+.logo-text-static {
+  font-family: 'AirTravelers';
+  font-size: 160px; /* Same coordinate system as loader */
+  stroke: white;
+  stroke-width: 1.5; /* Slightly thicker for better visibility in navbar */
+  fill: white;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+
+/* Disable default nav-link underline for logo */
+.logo.nav-link::after {
+  display: none !important;
 }
 
 .nav-links {
   display: flex;
-  gap: 36px;
+  gap: 20px;
   list-style: none;
 }
 
 .nav-link {
   text-decoration: none;
   color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.95rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   position: relative;
   transition: color var(--transition-fast);
 }
@@ -60,98 +106,86 @@ nav {
   content: "";
   position: absolute;
   bottom: -4px;
-  left: 0;
-  width: 100%;
+  left: 50%;
+  width: 0%;
   height: 2px;
-  background: linear-gradient(90deg, var(--secondary), var(--primary));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: var(--primary);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px var(--primary);
 }
 
 .nav-link:hover::after,
 .nav-link.active::after {
-  transform: scaleX(1);
+  width: 80%;
 }
 
 .nav-link:hover,
 .nav-link.active {
-  color: var(--text);
+  color: #fff;
 }
 
-/* Hamburger Toggle (hidden on desktop) */
+/* CTA Button */
+.nav-cta-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+.nav-cta-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+/* Mobile Toggle */
 .nav-toggle {
   display: none;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
-  z-index: 11;
+  padding: 8px;
 }
 
-.nav-toggle span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--text);
-  border-radius: 2px;
-  transition: var(--transition-fast);
-  transform-origin: center;
-}
-
-.nav-toggle.active span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.nav-toggle.active span:nth-child(2) {
-  opacity: 0;
-  transform: scaleX(0);
-}
-
-.nav-toggle.active span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
+@media (max-width: 992px) {
+  nav { max-width: 95%; padding: 0 10px; }
+  .nav-center { display: none; }
+  .nav-logo-svg { width: 120px; }
 }
 
 @media (max-width: 768px) {
-
-  /* Navbar: Hamburger Menu */
-  .nav-toggle {
-    display: flex;
-  }
-
+  .nav-toggle { display: flex; }
+  .nav-cta-btn { display: none; }
+  
   .nav-links {
     position: fixed;
     top: 0;
     right: 0;
-    width: 70%;
-    max-width: 300px;
+    width: 280px;
     height: 100vh;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 32px;
     background: rgba(10, 10, 15, 0.95);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border-left: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
     transform: translateX(100%);
     transition: transform var(--transition-normal);
-    z-index: 10;
   }
 
   .nav-links.open {
     transform: translateX(0);
-  }
-
-  .nav-link {
-    font-size: 1.15rem;
-  }
-}
-
-@media (max-width: 480px) {
-  nav {
-    padding: 14px 5%;
   }
 }

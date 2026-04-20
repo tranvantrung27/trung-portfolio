@@ -1,0 +1,193 @@
+/* ========================================
+   ABOUT SECTION
+   ======================================== */
+#about {
+  padding: 120px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 5%;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 40px;
+  align-items: stretch;
+}
+
+.about-card {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px;
+  transition: all var(--transition-normal);
+}
+
+.about-card:hover {
+  background: var(--glass-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Intro Card Content */
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.about-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+}
+
+.about-metrics {
+  display: flex;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-val {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.m-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+/* Download Button */
+.cv-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  padding: 16px 32px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.2);
+}
+
+.cv-download-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(139, 92, 246, 0.4);
+}
+
+.cv-download-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.cv-download-btn:hover svg {
+  transform: translateY(2px);
+}
+
+/* Profile Card (Visual Placeholder) */
+.profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+/* Isolated 3D Box for the Profile Card */
+.profile-chamber {
+  perspective: 1500px;
+  transform-style: preserve-3d;
+  overflow: visible;
+  /* Restore glass effect to obscure the robot properly */
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background: rgba(15, 23, 42, 0.4) !important; /* Slightly dark/opaque glass */
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+
+
+
+.profile-placeholder {
+  width: 250px;
+  height: 250px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  background: transparent;
+  border-radius: 50%;
+}
+
+.glow-circle {
+  display: none;
+}
+
+.inner-shape {
+  display: none;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.1; }
+  50% { transform: scale(1.1); opacity: 0.25; }
+}
+
+@keyframes morph {
+  0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+  25% { border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%; }
+  50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
+  75% { border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%; }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 992px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-card {
+    height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  #about { padding: 80px 0; }
+  
+  .section-title { font-size: 2rem; }
+  
+  .about-card { padding: 32px; }
+  
+  .about-metrics {
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  
+  .metric .m-val { font-size: 2rem; }
+}

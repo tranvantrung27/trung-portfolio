@@ -5,7 +5,7 @@ export class UIManager {
   constructor() {
     this.navToggle = document.getElementById('navToggle');
     this.navLinks = document.getElementById('navLinks');
-    this.links = document.querySelectorAll('.nav-link');
+    this.links = document.querySelectorAll('.nav-link, .nav-cta-btn');
     this.init();
   }
 
@@ -18,10 +18,17 @@ export class UIManager {
   initSmoothScroll() {
     this.links.forEach((link) => {
       link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (!href.startsWith('#')) return; // Allow external links
+        
         e.preventDefault();
-        const target = document.querySelector(link.getAttribute('href'));
+        const targetId = href.substring(1);
+        const target = document.getElementById(targetId);
+        
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Update URL hash without jump
+          window.history.pushState(null, null, `#${targetId}`);
         }
         this.closeMenu();
       });

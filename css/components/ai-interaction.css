@@ -1,0 +1,190 @@
+/* AI Interaction UI */
+/* AI Interaction UI Container */
+#ai-ui-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+  z-index: 2000;
+  
+  /* Hidden by default, shown only on About section */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#ai-ui-container.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.ai-toggle-btn {
+  background: rgba(15, 15, 25, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(130, 100, 255, 0.3);
+  padding: 12px 20px;
+  border-radius: 50px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(100, 200, 255, 0.05);
+}
+
+.ai-toggle-btn:hover {
+  background: rgba(130, 100, 255, 0.2);
+  border-color: rgba(130, 100, 255, 0.6);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(130, 100, 255, 0.3);
+}
+
+.ai-toggle-btn.active {
+  background: rgba(50, 255, 150, 0.15);
+  border-color: #32ff96;
+  box-shadow: 0 0 30px rgba(50, 255, 150, 0.3);
+}
+
+.ai-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.ai-btn-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.ai-status-pill {
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(50, 255, 150, 0.5);
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #32ff96;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.ai-status-pill.hidden {
+  display: none !important;
+}
+
+.ai-pulse {
+  width: 8px;
+  height: 8px;
+  background: #32ff96;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #32ff96;
+  animation: ai-pulse-anim 1s infinite;
+}
+
+#cam-wrap {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 180px;
+  height: 135px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid rgba(180, 120, 255, 0.5);
+  box-shadow: 0 0 20px rgba(140, 80, 255, 0.3);
+  background: black;
+  transition: all 0.5s ease;
+}
+
+#cam-wrap.hidden {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+}
+
+#ai-webcam {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: block;
+}
+
+#handcv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+#ai-status-pill {
+  position: absolute;
+  top: -60px;
+  right: 0;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(180, 120, 255, 0.5);
+  padding: 8px 22px;
+  border-radius: 30px;
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.4s;
+}
+
+#ai-status-pill.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+#ai-hint {
+  position: absolute;
+  bottom: 0px;
+  right: 200px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.8;
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: right;
+  transition: opacity 0.5s;
+}
+
+#ai-hint.hidden {
+  opacity: 0;
+}
+
+@media (max-width: 768px) {
+  #ai-hint {
+    display: none;
+  }
+}
+
+@keyframes ai-pulse-anim {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  #ai-ui-container {
+    bottom: 20px;
+    right: 20px;
+  }
+}

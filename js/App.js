@@ -14,6 +14,8 @@ import { ProjectModal } from './ui/ProjectModal.js';
 import { GameManager } from './games/GameManager.js';
 import { config } from './utils/utils.js';
 import { gsap } from 'gsap';
+import { VisionManager } from './managers/VisionManager.js';
+import { GestureSphere } from './entities/GestureSphere.js';
 
 /**
  * MASTER APP CLASS
@@ -27,6 +29,7 @@ export default class App {
 
     // Systems
     this.sceneManager = null;
+    this.fgManager = null; // Foreground Manager for AI Sphere
     this.gameManager = null;
     this.scrollManager = null;
     this.uiManager = null;
@@ -45,7 +48,12 @@ export default class App {
     this.isArcadeGameRunning = true;
     this.arcadeHovered = false;
     this.isGameOverProcessed = false;
-    this.scoreModalTimeout = null; // Quản lý timeout của bảng điểm
+    this.scoreModalTimeout = null;
+
+    // AI Interaction Systems
+    this.visionManager = null;
+    this.gestureSphere = null;
+    this.isAIActive = false;
 
     // Nhạc nền phòng Arcade (Chỉ kêu khi giao diện ở Menu Game)
     this.arcadeMenuAudio = new Audio('./assets/sounds/gaming-sounds.mp3');
@@ -161,16 +169,31 @@ export default class App {
     this.loadAssets();
   }
 
+  // --- MODULAR INITIALIZATION ---
+
   setupEntities() {
     const scene = this.sceneManager.scene;
-    const cam = this.sceneManager.cameraCtrl.camera;
     const renderer = this.sceneManager.renderer;
+    const cam = this.sceneManager.cameraCtrl.camera;
 
+    // Background Layer
     this.robot = new Robot(scene);
     this.gun = new Gun(renderer, cam);
     this.mosquito = new Mosquito(scene, cam);
     this.arcade = new Arcade(scene);
     window.arcade = this.arcade;
+
+    // Foreground Layer (AI Interaction) - Modular isolation
+    this.initForeground();
+  }
+
+  initForeground() {
+    const fgCanvas = document.querySelector('#fg-canvas');
+    if (fgCanvas) {
+      // Foregrounds now uses 2D for the user's specific beads logic
+      this.gestureSphere = new GestureSphere(fgCanvas);
+      this.visionManager = new VisionManager();
+    }
   }
 
   loadAssets() {
@@ -186,7 +209,8 @@ export default class App {
 
       this.scrollManager = new ScrollManager(
         this.robot, this.gun, this.mosquito, this.arcade,
-        () => this.isGameActive
+        () => this.isGameActive,
+        this
       );
 
       this.uiManager = new UIManager();
@@ -198,13 +222,119 @@ export default class App {
   }
 
   setupEvents() {
-    window.addEventListener('resize', () => this.sceneManager.onResize());
+    window.addEventListener('resize', () => {
+      this.sceneManager.onResize();
+      if (this.fgManager) this.fgManager.onResize();
+      this.handleResponsiveLayout();
+    });
 
     window.addEventListener('pointermove', (e) => this.handlePointerMove(e));
     window.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
     window.addEventListener('keydown', (e) => this.handleKeyDown(e));
 
     document.getElementById('arcade-close')?.addEventListener('click', () => this.closeArcade());
+
+    document.getElementById('btn-toggle-ai')?.addEventListener('click', () => this.toggleAI());
+
+    // Initial call
+    this.handleResponsiveLayout();
+  }
+
+  handleResponsiveLayout() {
+    if (!this.robot || !this.arcade) return;
+
+    const width = window.innerWidth;
+
+    // Desktop/Laptop responsiveness only (ignore < 768 as requested)
+    if (width < 768) return;
+
+    // We calculate a factor relative to a "standard" large display (1600px)
+    // As width decreases, we pull objects inward (reducing X values)
+    const factor = Math.min(1, width / 1600);
+
+    if (this.robot.handleResponsiveLayout) {
+      this.robot.handleResponsiveLayout(factor);
+    }
+
+    if (this.arcade.handleResponsiveLayout) {
+      this.arcade.handleResponsiveLayout(factor);
+    }
+  }
+
+  // Returns world position (THREE.Vector3) for a DOM element at Z=0
+  getDOMWorldPosition(element) {
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    const x = ((rect.left + rect.right) / 2 / window.innerWidth) * 2 - 1;
+    const y = -((rect.top + rect.bottom) / 2 / window.innerHeight) * 2 + 1;
+
+    // Use the FOREGROUND camera for projection as it's the one rendering the sphere
+    const cam = this.fgManager ? this.fgManager.cameraCtrl.camera : this.sceneManager.cameraCtrl.camera;
+    const vector = new THREE.Vector3(x, y, 0.5);
+    vector.unproject(cam);
+    const dir = vector.sub(cam.position).normalize();
+    // Distance multiplier slightly closer than the robot's Z plane
+    const distance = (Math.abs(cam.position.z) - 0.2) / Math.abs(dir.z);
+    return cam.position.clone().add(dir.multiplyScalar(distance));
+  }
+
+  async toggleAI() {
+    const btn = document.getElementById('btn-toggle-ai');
+    const pill = document.getElementById('ai-status-pill');
+    const statusText = document.getElementById('ai-status-text');
+    const webcam = document.getElementById('ai-webcam');
+    const handcv = document.getElementById('handcv');
+    const wrap = document.getElementById('cam-wrap');
+    const hint = document.getElementById('ai-hint');
+
+    if (!this.isAIActive) {
+      try {
+        btn.classList.add('active');
+        btn.querySelector('.ai-btn-text').textContent = 'INITIALIZING...';
+
+        await this.visionManager.init(webcam, handcv);
+        await this.visionManager.start();
+
+        this.isAIActive = true;
+        btn.querySelector('.ai-btn-text').textContent = 'STOP';
+        pill.classList.remove('hidden');
+        wrap.classList.remove('hidden');
+        hint.classList.remove('hidden');
+
+        this.visionManager.onGestureUpdate = (gesture) => {
+          if (gesture === 'NONE') {
+            statusText.textContent = '👋 Đưa tay vào camera';
+          } else {
+            statusText.textContent = gesture === 'PALM' ? '🖐 Xòe tay — Bung ra!' : '✊ Nắm tay — Tụ lại!';
+          }
+
+          if (this.gestureSphere) {
+            this.gestureSphere.setExplode(gesture === 'PALM');
+            this.gestureSphere.setHandState(
+              this.visionManager.handDetected,
+              this.visionManager.handX,
+              this.visionManager.handY
+            );
+          }
+        };
+      } catch (err) {
+        console.error('Failed to start AI:', err);
+        btn.classList.remove('active');
+        btn.querySelector('.ai-btn-text').textContent = 'AI FAILED';
+      }
+    } else {
+      this.isAIActive = false;
+      this.visionManager.stop();
+      btn.classList.remove('active');
+      btn.querySelector('.ai-btn-text').textContent = 'KINETIC SYNC';
+      pill.classList.add('hidden');
+      wrap.classList.add('hidden');
+      hint.classList.add('hidden');
+      if (this.gestureSphere) {
+        this.gestureSphere.setExplode(false);
+        this.gestureSphere.setHandState(false, 0.5, 0.5);
+      }
+    }
   }
 
   handlePointerMove(e) {
@@ -330,6 +460,19 @@ export default class App {
 
       this.robot.update(dt, elapsed);
       this.arcade.update(dt, this.isArcadeGameRunning);
+      // Sphere always renders — camera only activates with AI button
+      if (this.gestureSphere) {
+        const placeholder = document.querySelector('.profile-placeholder');
+        if (placeholder) {
+          // Pass the card's screen rect directly — no 3D projection needed
+          const cardRect = placeholder.getBoundingClientRect();
+          this.gestureSphere.update(dt, cardRect);
+          this.gestureSphere.render();
+        }
+      }
+
+      this.sceneManager.render();
+      this.gun.renderHUD();
 
       if (this.isArcadeGameRunning) {
         this.gameManager.update(dt);

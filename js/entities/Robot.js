@@ -104,6 +104,34 @@ export class Robot {
     this.isPresenting = isPresenting;
   }
 
+  handleResponsiveLayout(factor) {
+    // factor is relative to 1600px
+    const width = window.innerWidth;
+    
+    // Scale down a bit more on smaller laptops
+    this.targetScale = config.robot.scale * Math.max(0.7, factor);
+    
+    // Adjust the current target position X based on the factor
+    // We only want to "squeeze" the X position
+    // Base X for home is 2.0. If width is 1000px (factor 0.6) -> X becomes 1.2
+    this.targetPos.x = this._baseStateX() * factor;
+  }
+
+  _baseStateX() {
+    // Identify the base X coordinate for the current section from config
+    // This is needed to keep the logic clean during transitions
+    const states = config.robot.states;
+    // We try to find which state we are closest to or current target
+    // For now, let's just assume the most common is home=2.0
+    // But a better way is to iterate and find the match
+    for (const key in states) {
+      if (Math.abs(this.targetPos.z - states[key].pos[2]) < 0.1) {
+        return states[key].pos[0];
+      }
+    }
+    return 2.0;
+  }
+
   setMouseTarget(x, y) {
     this.mouseTarget.set(x, y);
   }

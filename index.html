@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./css/sections/skills.css" />
+  <link rel="stylesheet" href="./css/sections/about.css" />
+  <link rel="stylesheet" href="./css/components/navbar.css" />
   <link rel="stylesheet" href="./css/components/leaderboard.css" />
 
   <!-- Favicon -->
@@ -50,6 +53,31 @@
   <div id="robot-chat-bubble" class="cyber-bubble hidden">
     <div class="cyber-bubble-text" id="robot-chat-text">...</div>
     <div class="cyber-bubble-pointer"></div>
+  </div>
+
+  <!-- AI Gesture Interaction UI (User Logic) -->
+  <div id="ai-ui-container">
+    <button id="btn-toggle-ai" class="ai-toggle-btn" title="Toggle AI Gesture Interaction">
+      <svg class="ai-icon" viewBox="0 0 24 24">
+        <path d="M12,2A10,10,0,1,0,22,12,10.011,10.011,0,0,0,12,2Zm0,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,12,20Z"/>
+        <path d="M12,6a6,6,0,1,0,6,6A6.007,6.007,0,0,0,12,6Zm0,10a4,4,0,1,1,4-4A4,4,0,0,1,12,16Z"/>
+      </svg>
+      <span class="ai-btn-text">KINETIC SYNC</span>
+    </button>
+
+    <div id="cam-wrap" class="hidden">
+      <video id="ai-webcam" autoplay playsinline muted></video>
+      <canvas id="handcv"></canvas>
+    </div>
+
+    <div id="ai-status-pill" class="hidden">
+      <div class="ai-pulse"></div>
+      <span id="ai-status-text">👋 Đưa tay vào camera</span>
+    </div>
+
+    <div id="ai-hint" class="hidden">
+      ✊ Nắm tay → quả cầu tụ lại<br>🖐 Xòe tay → bung ra
+    </div>
   </div>
 
   <!-- Arcade Back Button (Shown when zoomed in) -->
@@ -102,16 +130,34 @@
 
   <!-- Navigation Bar -->
   <nav id="navbar">
-    <div class="logo">Trung</div>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="#home" class="nav-link active">Home</a></li>
-      <li><a href="#projects" class="nav-link">Projects</a></li>
-      <li><a href="#skills" class="nav-link">Skills</a></li>
-      <li><a href="#contact" class="nav-link">Contact</a></li>
-    </ul>
+    <div class="nav-left">
+      <a href="#home" class="logo nav-link" aria-label="Home">
+        <svg class="nav-logo-svg" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" class="logo-text-static">
+            Trung.
+          </text>
+        </svg>
+      </a>
+    </div>
+
+    <div class="nav-center">
+      <div class="nav-pill">
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#home" class="nav-link active">Home</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#projects" class="nav-link">Projects</a></li>
+          <li><a href="#skills" class="nav-link">Skills</a></li>
+          <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="#contact" class="nav-cta-btn">Hire Me</a>
+    </div>
   </nav>
 
   <!-- Arcade Leaderboard Sidebar (Left) -->
@@ -149,8 +195,11 @@
   </div>
 
 
-  <!-- Canvas Background (Robot renders here) -->
+  <!-- Canvas Background (Robot/Arcade - Behind UI) -->
   <canvas id="bg"></canvas>
+  
+  <!-- Canvas Foreground (Gestures/Particles - Top of UI) -->
+  <canvas id="fg-canvas"></canvas>
 
   <!-- Main Content Overlays -->
   <main>
@@ -167,6 +216,45 @@
           <div class="wheel"></div>
         </div>
         <p class="scroll-label">Scroll to Explore</p>
+      </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about">
+      <div class="about-container">
+        <div class="about-grid">
+          <div class="about-card intro-card">
+            <h2 class="section-title">Who am I?</h2>
+            <p class="about-text">
+              Tôi là một AI Developer đam mê xây dựng những giải pháp thông minh. Với nền tảng vững chắc về Deep
+              Learning và Computer Vision,
+              tôi luôn tìm cách kết hợp AI vào các ứng dụng thực tế để tạo ra giá trị cho người dùng.
+            </p>
+            <div class="about-metrics">
+              <div class="metric">
+                <span class="m-val">2+</span>
+                <span class="m-label">Years Exp</span>
+              </div>
+              <div class="metric">
+                <span class="m-val">10+</span>
+                <span class="m-label">Projects</span>
+              </div>
+            </div>
+            <a href="./assets/pdf/trung-cv.pdf" class="cv-download-btn" target="_blank">
+              <span>View Full CV</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M7 13l5 5 5-5M12 18V6" />
+              </svg>
+            </a>
+          </div>
+          <div class="about-card profile-card profile-chamber">
+            <!-- Space for a future profile image or interactive component -->
+            <div class="profile-placeholder">
+              <div class="glow-circle"></div>
+              <div class="inner-shape"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
