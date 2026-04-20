@@ -178,7 +178,11 @@ class LeaderboardManager {
   /**
    * Show the score submission modal.
    */
-  showSubmitModal() {
+  showSubmitModal(score) {
+    if (score !== undefined) {
+      this.pendingScore = score;
+    }
+    
     // Xóa/Ẩn overlay Game Over cũ để tránh bị chồng chéo văn bản
     const gameOverOverlay = document.getElementById('jumpscare-overlay');
     if (gameOverOverlay) gameOverOverlay.style.display = 'none';

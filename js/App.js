@@ -121,7 +121,7 @@ export default class App {
         if (finalScore > 0 && !leaderboardMgr.playerName) {
           this.scoreModalTimeout = setTimeout(() => {
             if (this.arcadeIsOpen) {
-              leaderboardMgr.showSubmitModal();
+              leaderboardMgr.showSubmitModal(finalScore);
             }
           }, 2500);
         }
@@ -262,6 +262,12 @@ export default class App {
 
   handleKeyDown(e) {
     if (this.arcadeIsOpen) {
+      // If Esc is pressed and we are already in menu mode, close the arcade machine
+      if (e.code === 'Escape' && this.gameManager.isMenuMode) {
+        this.closeArcade();
+        return;
+      }
+
       this.gameManager.handleInput(e.code);
 
       const blockKeys = ['ArrowUp', 'ArrowDown', 'Space', 'Enter', 'PageUp', 'PageDown'];
