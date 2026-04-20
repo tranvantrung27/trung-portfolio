@@ -40,7 +40,7 @@ class LeaderboardManager {
       this.playerName = null;
       this._initialized = true;
 
-      this.setupAuth();
+      // Auth setup moved outside try block (only runs when !firebaseDisabled)
     } catch (err) {
       console.warn("[Leaderboard] Initialization failed:", err.message);
       this.firebaseDisabled = true;
@@ -59,11 +59,14 @@ class LeaderboardManager {
       warning: document.getElementById('profanity-warning')
     };
 
-    this.setupAuth();
+    if (!this.firebaseDisabled) {
+      this.setupAuth();
+    }
     this.setupModal();
   }
 
   setupAuth() {
+    if (!this.auth) return;
     onAuthStateChanged(this.auth, (user) => {
       this.user = user;
       if (user) {
