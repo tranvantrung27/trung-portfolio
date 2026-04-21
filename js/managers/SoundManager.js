@@ -8,6 +8,7 @@ export const SOUNDS = {
   SFX: {
     LASER_HIT: `${BASE}assets/sounds/laser_hit.mp3`,
     WHOOSH: `${BASE}assets/sounds/whoosh__.mp3`,
+    PROP: `${BASE}assets/sounds/prop.mp3`,
   },
   LOOPS: {
     MOSQUITO:  `${BASE}assets/sounds/mosquito.mp3`,

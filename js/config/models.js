@@ -13,5 +13,8 @@ export const MODELS = {
     MOSQUITO:       './assets/models/mosquito.glb',
     ARCADE:         './assets/models/trung_arcade.glb',
     SNAKE:          './assets/models/snake.glb',
+  },
+  DECORATION: {
+    DORAEMON_DOOR: '/assets/models/doraemon_door.glb',
   }
 };

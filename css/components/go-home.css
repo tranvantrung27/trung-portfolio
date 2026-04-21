@@ -1,0 +1,34 @@
+/* 
+   Go Home State Transition
+   Smoothly hides all UI elements to focus on the 3D scene
+*/
+
+html.go-home-active,
+body.go-home-active {
+    overflow: hidden !important;
+    height: 100vh !important;
+}
+
+.go-home-active #navbar,
+.go-home-active main,
+.go-home-active #footer,
+.go-home-active #robot-chat-bubble,
+.go-home-active #arcade-leaderboard,
+.go-home-active #ai-ui-container,
+.go-home-active .scroll-indicator {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.8s ease-in-out, visibility 0.8s !important;
+}
+
+/* Ensure background remains visible */
+.go-home-active #bg {
+    filter: brightness(0.8) contrast(1.1);
+    transition: filter 1.5s ease-in-out;
+}
+
+/* Special class to hide elements immediately the first time if needed */
+.hidden-instant {
+    display: none !important;
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Home | Welcome Back</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #33ccff;
+            --accent: #ff3399;
+            --bg: #050505;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--bg); color: white;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-whiteout {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 100;
+            animation: fadeOutWhite 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeOutWhite {
+            to { opacity: 0; pointer-events: none; }
+        }
+
+        h1 {
+            font-size: 5rem; font-weight: 600; margin: 0;
+            background: linear-gradient(to bottom, #fff, #888);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        p { font-size: 1.2rem; opacity: 0.5; margin-top: 10px; letter-spacing: 4px; text-transform: uppercase; }
+
+        .back-btn {
+            margin-top: 50px; background: none; border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 15px 40px; border-radius: 50px;
+            cursor: pointer; font-family: inherit; font-size: 1rem;
+            display: inline-flex; align-items: center; gap: 15px;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: white; color: black; border-color: white;
+            transform: scale(1.05); box-shadow: 0 10px 40px rgba(255,255,255,0.2);
+        }
+
+        .arrow { font-size: 1.5rem; transition: transform 0.3s; }
+        .back-btn:hover .arrow { transform: translateX(-5px); }
+
+        /* Animated Background Gradients */
+        .glow {
+            position: absolute; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(51, 204, 255, 0.1), transparent 70%);
+            top: -10vw; left: -10vw; filter: blur(100px);
+            animation: moveGlow 20s infinite alternate;
+        }
+
+        @keyframes moveGlow {
+            from { transform: translate(0, 0); }
+            to { transform: translate(30vw, 20vw); }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-whiteout"></div>
+    <div class="glow"></div>
+    
+    <div class="container">
+        <p>You have arrived</p>
+        <h1>Welcome Home.</h1>
+        
+        <a href="../" class="back-btn">
+            <span class="arrow">←</span>
+            BACK TO PORTFOLIO
+        </a>
+    </div>
+</body>
+</html>
