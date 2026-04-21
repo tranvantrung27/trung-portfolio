@@ -124,8 +124,8 @@ export class Interactions {
                     this.outlinePass.visibleEdgeColor.set(0xffffff);
                     
                     if (this.prompt) {
-                        this.prompt.style.display = 'block';
-                        this.prompt.innerText = 'Nhấn [E] để ngồi';
+                        this.prompt.style.display = 'flex';
+                        this.prompt.innerHTML = `Nhấn <span class="prompt-key">E</span> để ngồi`;
                     }
                 }
             } else {
@@ -133,8 +133,8 @@ export class Interactions {
             }
         } else {
             if (this.prompt) {
-                this.prompt.style.display = 'block';
-                this.prompt.innerText = 'Nhấn [E] hoặc di chuyển để đứng dậy';
+                this.prompt.style.display = 'flex';
+                this.prompt.innerHTML = `Nhấn <span class="prompt-key">E</span> hoặc di chuyển để đứng dậy`;
             }
             // Auto stand up on movement
             if (this.player.moveForward || this.player.moveBackward || this.player.moveLeft || this.player.moveRight) {

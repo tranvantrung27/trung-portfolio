@@ -12,6 +12,7 @@ export class World {
         this.floorObjects = [];
         this.wallObjects = [];
         this.propObjects = [];
+        this.collisionBoxes = [];
 
         // Dynamic elements
         this.pcFans = [];
@@ -35,6 +36,7 @@ export class World {
                 this.calculateScaleFactor();
                 this.setupEnvironment();
                 this.processHierarchy();
+                this.buildCollisionBoxes();
                 this.setupLights();
 
                 resolve({
@@ -66,11 +68,11 @@ export class World {
 
     setupEnvironment() {
         // Ambient & hemisphere light for natural look
-        const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.4);
         this.scene.add(ambient);
-        this.scene.add(new THREE.HemisphereLight(0xfff8f0, 0x8a7060, 1.0));
+        this.scene.add(new THREE.HemisphereLight(0xfff8f0, 0x8a7060, 0.5));
 
-        const roomFill = new THREE.PointLight(0xfff5e0, 1.0, 0, 1.5);
+        const roomFill = new THREE.PointLight(0xfff5e0, 0.4, 0, 1.5);
         this.scene.add(roomFill);
     }
 
@@ -82,28 +84,16 @@ export class World {
                 child.castShadow = true;
                 child.receiveShadow = true;
 
-                // Categorize for physics/interaction
-                if (name.includes('floor') || name.includes('object_8') || name.includes('san')) {
+                // 1. Floor logic
+                if (/floor|san|surface|ground|carpet|rug|mat/i.test(name)) {
                     this.floorObjects.push(child);
-                } else if (/wall|floor|san|ceiling|window|door/i.test(name)) {
-                    this.wallObjects.push(child);
-                } else if (/table|char|desk|cabinet|box|shelf|bed|sofa|furniture/i.test(name)) {
-                    // Prop collision (AABB)
-                    child.geometry.computeBoundingBox();
-                    const box = new THREE.Box3().setFromObject(child);
-                    const center = new THREE.Vector3();
-                    box.getCenter(center);
-                    
-                    // Slightly shrink collision box for smoother behavior
-                    const size = new THREE.Vector3();
-                    box.getSize(size);
-                    size.multiplyScalar(0.8);
-                    box.setFromCenterAndSize(center, size);
-                    
-                    child.userData.box = box;
-                    child.userData.center = center;
-                    this.propObjects.push(child);
                 }
+                // 2. Solid logic: Structural + Furniture
+                // Matches: wall*, door*, ceiling*, window* + table*, chair*, char*, desk*, sofa*, bed*, shelf*, cabinet*
+                else if (/wall|door|ceiling|window|table|char|desk|sofa|bed|shelf|cabinet|wardrobe|bookcase|counter/i.test(name)) {
+                    this.wallObjects.push(child);
+                }
+                // 3. Decorative items (lights, frames, etc.) are non-solid by default
 
                 // Special Materials
                 if (child.name === 'Object_22') { // Screen/Emissive
@@ -137,20 +127,20 @@ export class World {
             if (anchorNames.includes(child.name)) {
                 const pos = new THREE.Vector3();
                 child.getWorldPosition(pos);
-                
-                const isWorkLight = child.name === 'light2' || child.name === 'light3';
+
+                const isWorkLight = ['light1', 'light2', 'light3', 'light5', 'light6'].includes(child.name);
                 const intensity = isWorkLight ? 18 * this.scaleFactor : 35 * this.scaleFactor;
-                
+
                 const spotLight = new THREE.SpotLight(
-                    0xfff5e0, 
-                    intensity, 
-                    20 * this.scaleFactor, 
-                    isWorkLight ? Math.PI / 4.5 : Math.PI / 3.5, 
-                    0.8, 
+                    0xfff5e0,
+                    intensity,
+                    20 * this.scaleFactor,
+                    isWorkLight ? Math.PI / 4.5 : Math.PI / 3.5,
+                    0.8,
                     1.5
                 );
                 spotLight.position.copy(pos);
-                
+
                 const target = new THREE.Object3D();
                 if (isWorkLight) {
                     target.position.set(pos.x, pos.y - 5 * this.scaleFactor, pos.z + 1.8 * this.scaleFactor);
@@ -159,7 +149,7 @@ export class World {
                 }
                 this.scene.add(target);
                 spotLight.target = target;
-                
+
                 spotLight.castShadow = true;
                 spotLight.shadow.mapSize.set(512, 512);
                 spotLight.shadow.bias = -0.001;
@@ -181,11 +171,57 @@ export class World {
             const houseCenter = new THREE.Vector3();
             houseBox.getCenter(houseCenter);
 
-            const dirInward = new THREE.Vector3().subVectors(houseCenter, dCenter).setY(0).normalize();
-            const spawnPos = dCenter.clone().add(dirInward.multiplyScalar(2.0 * this.scaleFactor));
-            return { position: spawnPos, lookAt: houseCenter };
+            // Ép vector đi vào nhà CHỈ chạy dọc theo trục X (vô hiệu hóa trục Z)
+            const dirInward = new THREE.Vector3().subVectors(houseCenter, dCenter).setY(0).setZ(0).normalize();
+
+            // Lùi lại gần cửa (cách tâm cửa 1.5)
+            const spawnPos = dCenter.clone().add(dirInward.multiplyScalar(0.5 * this.scaleFactor));
+
+            // Ép camera ban đầu bằng mặt sàn gỗ thực tế, để không bị kẹt dưới móng nhà đen thui
+            const floorY = (this.roomBounds && !this.roomBounds.isEmpty()) ? this.roomBounds.min.y : houseBox.min.y;
+            spawnPos.y = floorY + 1.6 * this.scaleFactor;
+
+            // Hướng mắt nhìn thẳng băng vào trong dọc trục X
+            const straightLookTarget = spawnPos.clone().add(dirInward.clone().multiplyScalar(5));
+            return { position: spawnPos, lookAt: straightLookTarget };
         }
-        return { position: new THREE.Vector3(0, 1.6, 5), lookAt: new THREE.Vector3(0, 1.6, 0) };
+
+        // Fallback if no door is found
+        return { position: new THREE.Vector3(0, 1.6 * this.scaleFactor, 5), lookAt: new THREE.Vector3(0, 1.6 * this.scaleFactor, 0) };
+    }
+
+    // Pre-build collision data once at load (zero per-frame cost)
+    buildCollisionBoxes() {
+        // --- Room boundary from floor objects (keeps player INSIDE the room) ---
+        this.roomBounds = new THREE.Box3();
+        for (const floor of this.floorObjects) {
+            this.roomBounds.expandByObject(floor);
+        }
+        // Fallback: use model bounds if no floor detected
+        if (this.roomBounds.isEmpty()) {
+            this.roomBounds.setFromObject(this.model);
+        }
+
+        // --- Furniture AABB (keeps player OUTSIDE objects like table/chair) ---
+        // Filter: only add furniture-scale meshes (skip room-scale wall/ceiling meshes)
+        // Room-scale threshold: if XZ footprint > 4m, it's structural, not furniture
+        const MAX_FURNITURE_XZ = 4.0 * this.scaleFactor;
+        this.collisionBoxes = [];
+        for (const obj of this.wallObjects) {
+            const box = new THREE.Box3().setFromObject(obj);
+            const size = box.getSize(new THREE.Vector3());
+            // Skip room-scale meshes (walls / ceiling / large floor panels)
+            if (Math.max(size.x, size.z) > MAX_FURNITURE_XZ) continue;
+            // Skip degenerate zero-size meshes
+            if (size.x < 0.001 && size.z < 0.001) continue;
+            this.collisionBoxes.push(box);
+        }
+
+        const rb = this.roomBounds;
+        console.log(
+            `[World] Room bounds: X[${rb.min.x.toFixed(1)},${rb.max.x.toFixed(1)}] Z[${rb.min.z.toFixed(1)},${rb.max.z.toFixed(1)}]`,
+            `| ${this.collisionBoxes.length} furniture boxes | scaleFactor=${this.scaleFactor.toFixed(3)}`
+        );
     }
 
     update(elapsedTime) {

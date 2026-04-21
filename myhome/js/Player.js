@@ -21,7 +21,7 @@ export class Player {
         this.FRICTION = 10.0;
         this.WALK_SPEED = 25.0;
         this.EYE_HEIGHT = 1.6;
-        this.PLAYER_RADIUS = 0.25;
+        this.PLAYER_RADIUS = 0.35;
 
         // Audio
         this.footstepSound = null;
@@ -77,8 +77,11 @@ export class Player {
     setupPhysics() {
         const sf = this.world.scaleFactor;
         this.EYE_HEIGHT = 1.6 * sf;
-        this.PLAYER_RADIUS = 0.25 * sf;
+        this.PLAYER_RADIUS = 0.35 * sf;
         this.WALK_SPEED = 25.0 * sf;
+        // Reusable raycaster for floor detection (avoid per-frame allocation)
+        this._floorRay = new THREE.Raycaster();
+        this._floorRay.ray.direction.set(0, -1, 0);
     }
 
     update(delta) {
@@ -87,127 +90,118 @@ export class Player {
         const player = this.controls.getObject();
         const pos = player.position;
 
-        // Physics Sub-stepping for stability
-        const steps = 4;
-        const subDelta = delta / steps;
+        // Physics sub-stepping for stability
+        const STEPS = 3;
+        const subDelta = delta / STEPS;
         let onFloor = false;
 
-        const isMovingPhysically = this.velocity.length() > 0.05;
-
-        for (let s = 0; s < steps; s++) {
-            // Apply Friction
+        for (let s = 0; s < STEPS; s++) {
+            // 1. Friction (horizontal only)
             this.velocity.x -= this.velocity.x * this.FRICTION * subDelta;
             this.velocity.z -= this.velocity.z * this.FRICTION * subDelta;
-            
-            // Apply Gravity
+
+            // 2. Gravity
             if (this.collisionEnabled) {
-                this.velocity.y -= Math.min(9.8 * 25.0 * this.world.scaleFactor, 9.8 * 50.0) * subDelta;
+                this.velocity.y -= 9.8 * 22.0 * this.world.scaleFactor * subDelta;
             } else {
                 this.velocity.y -= this.velocity.y * this.FRICTION * subDelta;
             }
 
-            // Input direction
+            // 3. Input → velocity
             this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
             this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
             this.direction.normalize();
 
             if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * this.WALK_SPEED * subDelta;
-            if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * this.WALK_SPEED * subDelta;
+            if (this.moveLeft || this.moveRight)       this.velocity.x -= this.direction.x * this.WALK_SPEED * subDelta;
 
-            // --- COLLISION LOGIC ---
-            if (this.collisionEnabled && isMovingPhysically) {
-                this.handleWallCollisions(pos);
-                this.handlePropCollisions(pos);
+            // 4. Apply movement FIRST
+            this.controls.moveRight(-this.velocity.x * subDelta);
+            this.controls.moveForward(-this.velocity.z * subDelta);
+            if (this.velocity.y !== 0) pos.y += this.velocity.y * subDelta;
+
+            // 5. Resolve collisions — always run when collision enabled
+            if (this.collisionEnabled) {
+                this.handleSolidCollisions(pos);
             }
 
-            // --- FLOOR DETECTION ---
+            // 6. Floor detection (one ray, reusable Raycaster)
             if (this.collisionEnabled && this.world.floorObjects.length > 0) {
-                const ray = new THREE.Raycaster(pos.clone().setY(pos.y + (1.0 * this.world.scaleFactor)), new THREE.Vector3(0, -1, 0));
-                const hits = ray.intersectObjects(this.world.floorObjects, true);
+                this._floorRay.ray.origin.set(pos.x, pos.y + this.world.scaleFactor, pos.z);
+                const hits = this._floorRay.intersectObjects(this.world.floorObjects, true);
                 if (hits.length > 0) {
-                    const ty = hits[0].point.y + this.EYE_HEIGHT;
-                    if (pos.y <= ty + 0.1 * this.world.scaleFactor) {
+                    const targetY = hits[0].point.y + this.EYE_HEIGHT;
+                    if (pos.y <= targetY + 0.1 * this.world.scaleFactor) {
+                        pos.y = targetY;
                         this.velocity.y = 0;
-                        pos.y = ty;
                         this.canJump = true;
                         onFloor = true;
                     }
                 }
             }
 
-            // Min height safety
+            // Safety floor
             if (this.collisionEnabled && !onFloor && pos.y < this.EYE_HEIGHT) {
                 pos.y = this.EYE_HEIGHT;
                 this.velocity.y = 0;
                 this.canJump = true;
             }
-
-            // Apply Move
-            this.controls.moveRight(-this.velocity.x * subDelta);
-            this.controls.moveForward(-this.velocity.z * subDelta);
-            if (this.velocity.y !== 0) pos.y += (this.velocity.y * subDelta);
         }
 
         this.updateFootsteps(pos, delta, onFloor);
         this.lastPos.copy(pos);
     }
 
-    handleWallCollisions(pos) {
-        const yawQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, this.controls.getObject().rotation.y, 0));
-        const contactRays = [
-            new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -1),
-            new THREE.Vector3(1, 0, 0), new THREE.Vector3(-1, 0, 0)
-        ];
+    // Two-tier collision:
+    //   Tier 1 — Room boundary (floor-derived AABB): keeps player INSIDE the room
+    //   Tier 2 — Furniture AABB (sphere-box): keeps player OUTSIDE tables/chairs
+    handleSolidCollisions(pos) {
+        const R  = this.PLAYER_RADIUS;
+        const sf = this.world.scaleFactor;
 
-        const ray = new THREE.Raycaster();
-        for (let i = 0; i < 4; i++) {
-            const rDir = contactRays[i].clone().applyQuaternion(yawQuat);
-            ray.set(pos.clone().setY(pos.y - 0.5 * this.world.scaleFactor), rDir);
-            ray.far = this.PLAYER_RADIUS * 1.5;
-            const hits = ray.intersectObjects(this.world.wallObjects, true);
-            
-            if (hits.length > 0 && hits[0].distance < this.PLAYER_RADIUS) {
-                const hit = hits[0];
-                const overlap = this.PLAYER_RADIUS - hit.distance;
-                const normal = hit.face.normal.clone().applyMatrix3(new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld)).normalize();
-                
-                const dotM = rDir.dot(normal);
-                const pushNormal = (dotM > 0) ? normal.negate() : normal;
-                pos.add(pushNormal.multiplyScalar(overlap * 1.1));
-                
-                const dotV = this.velocity.dot(pushNormal);
-                if (dotV < 0) {
-                    this.velocity.x -= pushNormal.x * dotV;
-                    this.velocity.z -= pushNormal.z * dotV;
-                }
+        // --- TIER 1: Room boundary fence ---
+        const bounds = this.world.roomBounds;
+        if (bounds && !bounds.isEmpty()) {
+            const margin = R + 0.01;
+            if (pos.x < bounds.min.x + margin) { pos.x = bounds.min.x + margin; if (this.velocity.x < 0) this.velocity.x = 0; }
+            if (pos.x > bounds.max.x - margin) { pos.x = bounds.max.x - margin; if (this.velocity.x > 0) this.velocity.x = 0; }
+            if (pos.z < bounds.min.z + margin) { pos.z = bounds.min.z + margin; if (this.velocity.z < 0) this.velocity.z = 0; }
+            if (pos.z > bounds.max.z - margin) { pos.z = bounds.max.z - margin; if (this.velocity.z > 0) this.velocity.z = 0; }
+        }
+
+        // --- TIER 2: Furniture AABB ---
+        const boxes  = this.world.collisionBoxes;
+        if (!boxes || boxes.length === 0) return;
+
+        const feetY = pos.y - this.EYE_HEIGHT;
+        const headY = pos.y + 0.1 * sf;
+
+        for (const box of boxes) {
+            if (box.max.y < feetY || box.min.y > headY) continue;
+
+            const closestX = Math.max(box.min.x, Math.min(pos.x, box.max.x));
+            const closestZ = Math.max(box.min.z, Math.min(pos.z, box.max.z));
+
+            const dx = pos.x - closestX;
+            const dz = pos.z - closestZ;
+            const distSq = dx * dx + dz * dz;
+
+            if (distSq >= R * R || distSq < 1e-8) continue;
+
+            const dist = Math.sqrt(distSq);
+            const nx = dx / dist;
+            const nz = dz / dist;
+
+            const pen = R - dist;
+            pos.x += nx * (pen + 0.002);
+            pos.z += nz * (pen + 0.002);
+
+            const vDotN = this.velocity.x * nx + this.velocity.z * nz;
+            if (vDotN < 0) {
+                this.velocity.x -= nx * vDotN;
+                this.velocity.z -= nz * vDotN;
             }
         }
-    }
-
-    handlePropCollisions(pos) {
-        const nearbyProps = this.world.propObjects.filter(m => pos.distanceTo(m.userData.center) < 5.0 * this.world.scaleFactor);
-        nearbyProps.forEach(obj => {
-            const box = obj.userData.box;
-            const closest = new THREE.Vector3(
-                Math.max(box.min.x, Math.min(pos.x, box.max.x)),
-                pos.y,
-                Math.max(box.min.z, Math.min(pos.z, box.max.z))
-            );
-            const diff = new THREE.Vector3().subVectors(pos, closest);
-            const dist = diff.length();
-            
-            if (dist < this.PLAYER_RADIUS) {
-                const overlap = this.PLAYER_RADIUS - dist;
-                const n = (dist === 0) ? new THREE.Vector3(0, 0, 1) : diff.normalize();
-                pos.add(n.multiplyScalar(overlap * 1.1));
-                
-                const dotV = this.velocity.dot(n);
-                if (dotV < 0) {
-                    this.velocity.x -= n.x * dotV;
-                    this.velocity.z -= n.z * dotV;
-                }
-            }
-        });
     }
 
     updateFootsteps(pos, delta, onFloor) {

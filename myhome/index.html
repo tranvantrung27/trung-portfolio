@@ -257,18 +257,39 @@
             top: 58%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             color: white;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 12px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: none;
             z-index: 100;
-            letter-spacing: 1px;
-            animation: promptIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            animation: promptIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .prompt-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            color: var(--primary);
+            font-weight: 900;
+            font-family: 'Inter';
+            font-size: 0.9rem;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            margin: 0 4px;
         }
 
         @keyframes promptIn {

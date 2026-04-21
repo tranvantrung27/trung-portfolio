@@ -41,7 +41,7 @@ export class App {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.2;
+        this.renderer.toneMappingExposure = 0.85;
         document.body.appendChild(this.renderer.domElement);
 
         // --- 2. Post Processing ---
@@ -70,9 +70,23 @@ export class App {
             const loadData = await this.world.load('/assets/models/home/home.glb');
             this.player.setupPhysics();
             
-            // Initial Spawn
-            this.player.controls.getObject().position.copy(loadData.spawnInfo.position);
-            this.player.controls.getObject().lookAt(loadData.spawnInfo.lookAt);
+            const sf = loadData.scaleFactor;
+
+            // ─── SPAWN CONFIG ──────────────────────────────────────────────────
+            // Set SPAWN_OVERRIDE to manually control where the player starts.
+            // Room bounds: X[-2.7 → 2.9]  Z[-4.8 → 4.4]  (scaleFactor=1.074)
+            // null = use auto-detection from model (door / standPoint / center)
+            // ──────────────────────────────────────────────────────────────────
+            const SPAWN_OVERRIDE = null;
+
+            const cam = this.player.controls.getObject();
+            if (SPAWN_OVERRIDE) {
+                cam.position.set(SPAWN_OVERRIDE.x, SPAWN_OVERRIDE.y, SPAWN_OVERRIDE.z);
+                cam.lookAt(SPAWN_OVERRIDE.lookX, SPAWN_OVERRIDE.y, SPAWN_OVERRIDE.lookZ);
+            } else {
+                cam.position.copy(loadData.spawnInfo.position);
+                cam.lookAt(loadData.spawnInfo.lookAt);
+            }
 
             this.setupUI();
             this.animate();
