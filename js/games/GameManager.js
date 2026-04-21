@@ -157,4 +157,14 @@ export class GameManager {
       this.currentGame.onKeyDown(code);
     }
   }
+
+  /**
+   * Pause or stop any active game session.
+   */
+  pause() {
+    if (this.currentGame) {
+      if (typeof this.currentGame.stop === 'function') this.currentGame.stop();
+      if (typeof this.currentGame.pause === 'function') this.currentGame.pause();
+    }
+  }
 }

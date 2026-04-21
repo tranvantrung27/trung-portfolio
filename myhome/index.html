@@ -1,101 +1,360 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Home | Welcome Back</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+            "three/examples/jsm/loaders/GLTFLoader.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js",
+            "three/examples/jsm/postprocessing/EffectComposer.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/postprocessing/EffectComposer.js",
+            "three/examples/jsm/postprocessing/RenderPass.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/postprocessing/RenderPass.js",
+            "three/examples/jsm/postprocessing/UnrealBloomPass.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/postprocessing/UnrealBloomPass.js",
+            "three/examples/jsm/postprocessing/OutlinePass.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/postprocessing/OutlinePass.js",
+            "three/examples/jsm/postprocessing/OutputPass.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/postprocessing/OutputPass.js",
+            "three/examples/jsm/environments/RoomEnvironment.js": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/environments/RoomEnvironment.js",
+            "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+          }
+        }
+    </script>
     <style>
         :root {
-            --primary: #33ccff;
+            --primary: #00ff88;
             --accent: #ff3399;
             --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: var(--bg); color: white;
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: white;
             font-family: 'Outfit', sans-serif;
             overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
         }
 
-        .container {
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            animation-delay: 0.5s;
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* Whiteout transition from previous page */
         .back-whiteout {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 100;
-            animation: fadeOutWhite 0.8s ease-out forwards;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 2000;
+            pointer-events: none;
+            animation: fadeOutWhite 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         @keyframes fadeOutWhite {
-            to { opacity: 0; pointer-events: none; }
+            0% {
+                opacity: 1;
+            }
+
+            40% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
         }
 
-        h1 {
-            font-size: 5rem; font-weight: 600; margin: 0;
-            background: linear-gradient(to bottom, #fff, #888);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -2px;
+        /* FPS Tour UI Overlay */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        p { font-size: 1.2rem; opacity: 0.5; margin-top: 10px; letter-spacing: 4px; text-transform: uppercase; }
+        #instructions {
+            background: var(--glass);
+            padding: 3.5rem;
+            border-radius: 40px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+            max-width: 700px;
+            position: relative;
+            overflow: hidden;
+        }
 
-        .back-btn {
-            margin-top: 50px; background: none; border: 1px solid rgba(255,255,255,0.2);
-            color: white; padding: 15px 40px; border-radius: 50px;
-            cursor: pointer; font-family: inherit; font-size: 1rem;
-            display: inline-flex; align-items: center; gap: 15px;
+        #instructions::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .welcome-title {
+            font-size: 3.8rem;
+            margin-bottom: 3rem;
+            letter-spacing: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #ffffff 30%, rgba(255, 255, 255, 0.5) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Control Grid */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3.5rem;
+            opacity: 0;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .control-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+        }
+
+        /* Keycap Styles */
+        .key-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .key-row {
+            display: flex;
+            gap: 4px;
+        }
+
+        .keycap {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom-width: 3px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Inter';
+            color: var(--primary);
+        }
+
+        .keycap.wide {
+            width: 100px;
+        }
+
+        /* Mouse Icon */
+        .mouse-icon {
+            width: 24px;
+            height: 36px;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .mouse-icon::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            width: 2px;
+            height: 6px;
+            background: var(--primary);
+            transform: translateX(-50%);
+            animation: mouseScroll 1.5s infinite;
+        }
+
+        @keyframes mouseScroll {
+            0% {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, 8px);
+                opacity: 0;
+            }
+        }
+
+        #start-button {
+            padding: 22px 70px;
+            font-size: 1.1rem;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 3px;
             transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+            opacity: 0;
+        }
+
+        #start-button:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.3);
+            background: var(--primary);
+            color: black;
+        }
+
+        /* Gameplay UI Elements */
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        #interact-prompt {
+            position: fixed;
+            top: 58%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 100;
+            letter-spacing: 1px;
+            animation: promptIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes promptIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .back-btn-ui {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            width: 45px;
+            height: 45px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.4s ease;
+            z-index: 1100;
         }
 
-        .back-btn:hover {
-            background: white; color: black; border-color: white;
-            transform: scale(1.05); box-shadow: 0 10px 40px rgba(255,255,255,0.2);
-        }
-
-        .arrow { font-size: 1.5rem; transition: transform 0.3s; }
-        .back-btn:hover .arrow { transform: translateX(-5px); }
-
-        /* Animated Background Gradients */
-        .glow {
-            position: absolute; width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(51, 204, 255, 0.1), transparent 70%);
-            top: -10vw; left: -10vw; filter: blur(100px);
-            animation: moveGlow 20s infinite alternate;
-        }
-
-        @keyframes moveGlow {
-            from { transform: translate(0, 0); }
-            to { transform: translate(30vw, 20vw); }
+        .back-btn-ui:hover {
+            background: white;
+            color: black;
+            transform: scale(1.1);
         }
     </style>
 </head>
+
 <body>
     <div class="back-whiteout"></div>
-    <div class="glow"></div>
-    
-    <div class="container">
-        <p>You have arrived</p>
-        <h1>Welcome Home.</h1>
-        
-        <a href="../" class="back-btn">
-            <span class="arrow">←</span>
-            BACK TO PORTFOLIO
-        </a>
+
+    <div id="overlay">
+        <div id="instructions">
+            <h1 class="welcome-title">WELCOME TO <br>MY HOME</h1>
+
+            <div class="controls-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="control-item">
+                    <span class="control-label">Di chuyển</span>
+                    <div class="key-group">
+                        <div class="keycap">W</div>
+                        <div class="key-row">
+                            <div class="keycap">A</div>
+                            <div class="keycap">S</div>
+                            <div class="keycap">D</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-item">
+                    <span class="control-label">Góc nhìn</span>
+                    <div class="mouse-icon"></div>
+                </div>
+                <div class="control-item">
+                    <span class="control-label">Tương tác</span>
+                    <div class="keycap">E</div>
+                </div>
+            </div>
+
+            <button id="start-button">LET'S GO</button>
+        </div>
     </div>
+
+    <div id="crosshair"></div>
+    <div id="interact-prompt">Nhấn [E] để tương tác</div>
+
+    <a href="../" class="back-btn-ui" title="Quay lại Portfolio">←</a>
+
+    <script type="module">
+        import { App } from './js/App.js';
+        const app = new App();
+        window.homeApp = app; 
+    </script>
 </body>
+
 </html>

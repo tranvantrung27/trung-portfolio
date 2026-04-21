@@ -17,7 +17,7 @@ export class DoraemonDoor {
 
     // SFX Assets
     this.ambientSound = new Audio('/assets/sounds/prop.mp3');
-    this.ambientSound.loop = true;
+    this.ambientSound.loop = false;
     this.ambientSound.volume = 0.4;
 
     this.whooshSound = new Audio('/assets/sounds/magic whoosh.mp3');
@@ -29,9 +29,9 @@ export class DoraemonDoor {
      */
     this.vfxConfig = {
       // 1. Hình dáng portal (Lúc mới hé cửa)
-      softness: 0.0,
-      rounded: 0.0,
-      intensity: 1.0,
+      softness: 0,
+      rounded: 0,
+      intensity: 1,
 
       // 2. Hình dáng portal (Lúc đạt cực đại/bay về camera)
       targetSoftness: 0.5,
@@ -40,14 +40,14 @@ export class DoraemonDoor {
 
       // 3. Thời gian & Nhịp điệu (Sync với âm thanh tại đây)
       doorDuration: 1.5,      // Thời gian cửa mở ra
-      explosionDelay: 1.0,    // Độ trễ trước khi ánh sáng bay (nên để < doorDuration)
-      explosionDuration: 2.2, // Thời gian ánh sáng bay (Tăng để nghe tiếng whoosh dài hơn)
-      redirectDelay: 2.5,     // Thời điểm chuyển trang (Tính từ lúc ánh sáng bắt đầu bay)
+      explosionDelay: 1,      // Độ trễ trước khi ánh sáng bay (nên để < doorDuration)
+      explosionDuration: 1.5, // Thời gian ánh sáng bay (Tăng để nghe tiếng whoosh dài hơn)
+      redirectDelay: 2.2,     // Thời điểm chuyển trang (Tính từ lúc ánh sáng bắt đầu bay)
 
       // 4. Kích thước & Vị trí
-      explosionScale: 180,
+      explosionScale: 150,
       explosionZ: 6,
-      portalY: 1.94,
+      portalY: 1.9, // Lowered from 1.94 to match model drop
       portalZ: -0.2,
       angle: -2.04
     };
@@ -60,7 +60,7 @@ export class DoraemonDoor {
     this.initPortal();
 
     this.group.visible = false;
-    this.group.position.set(0, -1.21, 0);
+    this.group.position.set(0, -1.25, 0); // Normalized floor position
     this.group.scale.setScalar(0);
     this.scene.add(this.group);
   }
@@ -123,7 +123,8 @@ export class DoraemonDoor {
 
       const box = new THREE.Box3().setFromObject(this.model);
       const center = box.getCenter(new THREE.Vector3());
-      this.model.position.set(-center.x, -box.min.y, -center.z);
+      // Lower the model by 0.2 units relative to the floor
+      this.model.position.set(-center.x, -box.min.y - 0.2, -center.z);
 
       this.model.traverse((child) => {
         const name = child.name.toLowerCase();
@@ -143,7 +144,9 @@ export class DoraemonDoor {
   }
 
   setVisible(visible) {
+    if (this.group.visible === visible) return;
     this.group.visible = visible;
+
     if (visible && !this.isOpening) {
       this.ambientSound.currentTime = 0;
       this.ambientSound.play().catch(() => { });
@@ -162,6 +165,17 @@ export class DoraemonDoor {
         this.portalMaterial.depthTest = true;
       }
     }
+  }
+
+  setHover(isHovered) {
+    if (!this.portalMaterial || this.isOpening) return;
+
+    // Smooth transition for hover effect
+    gsap.to(this.portalMaterial.uniforms.uIntensity, {
+      value: isHovered ? this.vfxConfig.intensity + 0.5 : this.vfxConfig.intensity,
+      duration: 0.3,
+      ease: 'power2.out'
+    });
   }
 
   openInward(onComplete) {

@@ -122,8 +122,8 @@ export class VisionManager {
 
   stop() {
     this.isActive = false;
-    this.camera.stop();
-    if (this.video.srcObject) {
+    if (this.camera) this.camera.stop();
+    if (this.video && this.video.srcObject) {
       const tracks = this.video.srcObject.getTracks();
       tracks.forEach(track => track.stop());
       this.video.srcObject = null;

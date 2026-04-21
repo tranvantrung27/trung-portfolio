@@ -51,6 +51,7 @@ export default class App {
     this.mosquito = null;
     this.arcade = null;
     this.doraemonDoor = null;
+    this.doorIsReady = false;
 
     // State
     this.isGameActive = false;
@@ -65,6 +66,7 @@ export default class App {
     this.visionManager = null;
     this.gestureSphere = null;
     this.isAIActive = false;
+    this.isRunning = false;
 
     // EXPOSE FOR GLOBAL CLEANUP (Leaderboard resets)
     window.portfolioApp = this;
@@ -172,6 +174,28 @@ export default class App {
     this.loadAssets();
   }
 
+  // --- LIFECYCLE ---
+  
+  destroy() {
+    this.isRunning = false;
+    console.log('[App] Destroying Main App Instance...');
+    
+    // Remove Global Listeners
+    window.removeEventListener('resize', this._boundResize);
+    window.removeEventListener('pointermove', this._boundPointerMove);
+    window.removeEventListener('pointerdown', this._boundPointerDown);
+    window.removeEventListener('keydown', this._boundKeyDown);
+
+    // Stop Sub-systems
+    if (this.visionManager) this.visionManager.stop();
+    if (this.gameManager && typeof this.gameManager.pause === 'function') {
+        this.gameManager.pause();
+    }
+    
+    // Dispose resources
+    if (this.sceneManager) this.sceneManager.dispose();
+  }
+
   // --- MODULAR INITIALIZATION ---
 
   setupEntities() {
@@ -207,7 +231,7 @@ export default class App {
       this.hideLoader();
     }, 5000);
 
-    this.doraemonDoor.load(MODELS.DECORATION.DORAEMON_DOOR);
+    // REMOVED: this.doraemonDoor.load(MODELS.DECORATION.DORAEMON_DOOR);
 
     this.robot.load(MODELS.CHARACTERS.ROBOT, () => {
       clearTimeout(safetyTimeout);
@@ -228,15 +252,21 @@ export default class App {
   }
 
   setupEvents() {
-    window.addEventListener('resize', () => {
+    this._boundResize = () => {
       this.sceneManager.onResize();
       if (this.fgManager) this.fgManager.onResize();
       this.handleResponsiveLayout();
-    });
+    };
+    this._boundPointerMove = (e) => this.interactionManager.handlePointerMove(e);
+    this._boundPointerDown = (e) => this.interactionManager.handlePointerDown(e);
+    this._boundKeyDown = (e) => this.interactionManager.handleKeyDown(e);
+    this._boundPopState = () => this.handlePopState();
 
-    window.addEventListener('pointermove', (e) => this.interactionManager.handlePointerMove(e));
-    window.addEventListener('pointerdown', (e) => this.interactionManager.handlePointerDown(e));
-    window.addEventListener('keydown', (e) => this.interactionManager.handleKeyDown(e));
+    window.addEventListener('resize', this._boundResize);
+    window.addEventListener('pointermove', this._boundPointerMove);
+    window.addEventListener('pointerdown', this._boundPointerDown);
+    window.addEventListener('keydown', this._boundKeyDown);
+    window.addEventListener('popstate', this._boundPopState);
 
     document.getElementById('arcade-close')?.addEventListener('click', () => this.closeArcade());
 
@@ -362,8 +392,22 @@ export default class App {
     this.viewManager.toggleGoHomeView(active);
   }
 
+  handlePopState() {
+    const isGohomeInHash = window.location.hash === '#gohome';
+    if (this.isGoHomeActive && !isGohomeInHash) {
+      // User hit Back button in browser while in Go Home view
+      this.toggleGoHomeView(false);
+    } else if (!this.isGoHomeActive && isGohomeInHash) {
+      // User hit Forward button in browser back to Go Home
+      this.toggleGoHomeView(true);
+    }
+  }
+
   startLoop() {
+    this.isRunning = true;
     const tick = () => {
+      if (!this.isRunning) return;
+
       const dt = this.clock.getDelta();
       const elapsed = this.clock.elapsedTime;
 
@@ -381,8 +425,6 @@ export default class App {
         }
       }
 
-      this.sceneManager.render();
-      this.gun.renderHUD();
 
       if (this.isArcadeGameRunning) {
         this.gameManager.update(dt);
@@ -393,7 +435,7 @@ export default class App {
         this.mosquito.update(dt);
       }
 
-      if (!this.arcadeIsOpen && !this.isGoHomeActive) {
+      if (!this.arcadeIsOpen && !this.isGoHomeActive && (!this.doraemonDoor || !this.doraemonDoor.isOpening)) {
         const rp = this.robot.group.position;
         this.sceneManager.cameraCtrl.setTarget(rp.x * 0.12 + 0.3, 0.9, 7);
         this.sceneManager.cameraCtrl.setLookAt(rp.x * 0.25, 0.3, rp.z);
