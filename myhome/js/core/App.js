@@ -66,7 +66,7 @@ export class App {
 
         // --- 4. Loading ---
         try {
-            const worldData = await this.world.load(import.meta.env.BASE_URL + 'assets/models/home/home1.glb');
+            const worldData = await this.world.load(import.meta.env.BASE_URL + 'assets/models/home/home.glb');
             this.player.setupPhysics();
 
             // Spawn vị trí ban đầu
