@@ -193,7 +193,7 @@ export class ViewManager {
             
             // BOOT THE HOME APP (SPA Way)
             if (url.includes('myhome')) {
-                const { App: HomeApp } = await import('../../myhome/js/App.js');
+                const { App: HomeApp } = await import('../../myhome/js/core/App.js');
                 new HomeApp();
             }
           }
@@ -202,7 +202,7 @@ export class ViewManager {
         if (this.app.destroy) this.app.destroy();
         document.body.innerHTML = newBodyContent;
         if (url.includes('myhome')) {
-            const { App: HomeApp } = await import('../../myhome/js/App.js');
+            const { App: HomeApp } = await import('../../myhome/js/core/App.js');
             new HomeApp();
         }
       }
