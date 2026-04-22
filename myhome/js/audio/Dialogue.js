@@ -31,13 +31,12 @@ export class Dialogue {
         window.speechSynthesis.speak(silentUtterance);
     }
 
-    // Kiểm tra âm thanh nhanh (gọi qua phím T)
     // testSound() {
     //     this.stopAudio();
     //     const msg = "🔊 Đang kiểm tra âm thanh... (Nếu không nghe thấy tiếng Beep, hãy kiểm tra loa máy tính)";
     //     this.textElement.innerText = msg;
     //     this.container.classList.add('active');
-
+    //
     //     if (this.audioElement) {
     //         this.audioElement.src = "https://www.soundjay.com/buttons/sounds/button-20.mp3";
     //         this.audioElement.play().then(() => {
@@ -47,13 +46,13 @@ export class Dialogue {
     //             this.speak("Hệ thống âm thanh đang bị chặn. Vui lòng click vào màn hình.");
     //         });
     //     }
-
-    setTimeout(() => {
-        if (this.textElement.innerText === msg) {
-            this.container.classList.remove('active');
-        }
-    }, 5000);
-    }
+    //
+    //     setTimeout(() => {
+    //         if (this.textElement.innerText === msg) {
+    //             this.container.classList.remove('active');
+    //         }
+    //     }, 5000);
+    // }
 
 // Dừng tất cả âm thanh
 stopAudio() {
