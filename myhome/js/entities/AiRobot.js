@@ -58,7 +58,7 @@ export class AiRobot {
                             }
 
                             if (child.material) {
-                                child.material.emissiveIntensity = 2.0;
+                                child.material.emissiveIntensity = 0.8;
                                 child.material.opacity = 1;
                                 child.material.transparent = false;
                                 if (child.material.emissive) {

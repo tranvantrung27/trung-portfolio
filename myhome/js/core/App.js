@@ -48,6 +48,8 @@ export class App {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        // --- CHỈNH ĐỘ SÁNG TỔNG THỂ CỦA TOÀN BỘ CĂN PHÒNG ---
+        this.renderer.toneMappingExposure = 1.0; // Mặc định: 1.0. Giảm xuống nếu thấy chói quá.
         document.body.appendChild(this.renderer.domElement);
 
         // --- 2. Environment (RoomEnvironment cho phản chiếu kim loại đẹp) ---
@@ -64,9 +66,9 @@ export class App {
 
         // --- 4. Loading ---
         try {
-            const worldData = await this.world.load('../assets/models/home/myhome.glb');
+            const worldData = await this.world.load('../assets/models/home/home1.glb');
             this.player.setupPhysics();
-            
+
             // Spawn vị trí ban đầu
             this.player.controls.getObject().position.copy(worldData.spawnInfo.position);
             this.camera.lookAt(worldData.spawnInfo.lookAt);
@@ -76,19 +78,19 @@ export class App {
 
             // --- 5. Post Processing ---
             this.setupPostProcessing();
-            
+
             this.interactions = new Interactions(
-                this.camera, 
-                this.scene, 
-                this.world, 
-                this.player, 
+                this.camera,
+                this.scene,
+                this.world,
+                this.player,
                 this.outlinePass,
                 this.aiRobot
             );
 
             this.setupUI();
             this.animate();
-            
+
         } catch (e) {
             console.error('[App] Init Error:', e);
         }
@@ -100,7 +102,9 @@ export class App {
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(new RenderPass(this.scene, this.camera));
 
-        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.4, 0.85);
+        // Đẩy threshold cực cao (0.95) để triệt tiêu việc "chói" trên diện rộng
+        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.3, 0.5, 0.82);
+        bloom.threshold = 0.95;
         this.composer.addPass(bloom);
 
         this.outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), this.scene, this.camera);
@@ -216,13 +220,13 @@ export class App {
             // Result (Gửi tới Brain)
             async (text) => {
                 log(`[BẠN NÓI]: "${text}"`);
-                
+
                 log("[AI BRAIN]: Đang gửi câu hỏi tới Groq...");
                 const answer = await this.brain.ask(text);
                 log(`[AI BRAIN]: Đã trả lời.`);
-                
+
                 // Trả lời và tự động đọc (mặc định shouldSpeak = true)
-                this.aiRobot.say(answer); 
+                this.aiRobot.say(answer);
             },
             // End
             () => {
@@ -248,7 +252,7 @@ export class App {
         if (this.player) this.player.update(delta);
         if (this.aiRobot) this.aiRobot.update(delta);
         if (this.interactions) this.interactions.update(this.world ? this.world.scaleFactor : 1);
-        
+
         this.updateAudioIndicator();
         this.render();
     }

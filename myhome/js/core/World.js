@@ -67,13 +67,12 @@ export class World {
     }
 
     setupEnvironment() {
-        // Ambient & hemisphere light for natural look
-        const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+        // Ambient & hemisphere light - GIẢM CỰC THẤP vì có RoomEnvironment
+        const ambient = new THREE.AmbientLight(0xffffff, 0.05);
         this.scene.add(ambient);
-        this.scene.add(new THREE.HemisphereLight(0xfff8f0, 0x8a7060, 0.5));
+        this.scene.add(new THREE.HemisphereLight(0xfff8f0, 0x8a7060, 0.1));
 
-        const roomFill = new THREE.PointLight(0xfff5e0, 0.4, 0, 1.5);
-        this.scene.add(roomFill);
+        // Bỏ PointLight roomFill vì nó làm cháy tường
     }
 
     processHierarchy() {
@@ -98,11 +97,18 @@ export class World {
                 // Special Materials
                 if (child.name === 'Object_22') { // Screen/Emissive
                     child.material.emissive = new THREE.Color(0xffffff);
-                    child.material.emissiveIntensity = 5.0;
+                    child.material.emissiveIntensity = 1.5;
                 }
 
                 if (child.material) {
                     child.material.side = THREE.DoubleSide;
+                    // --- TỰ CHỈNH TƯỜNG/TRẦN Ở ĐÂY ---
+                    if (/wall|ceiling|trần|tường|cột|pillar|surface_0/i.test(name)) {
+                        child.material.roughness = 0.6;        // CÀNG CAO CÀNG LÌ (GIẢM CHÓI). Mặc định: 1.0
+                        child.material.metalness = 0.1;        // ĐỘ KIM LOẠI. Mặc định: 0.0
+                        child.material.envMapIntensity = 0.8;  // ĐỘ PHẢN CHIẾU MÔI TRƯỜNG (ẢNH HƯỞNG MÀU SẮC). Mặc định: 1.0
+                        if (child.material.emissive) child.material.emissive.setHex(0x000000);
+                    }
                     if (/frame|picture|photo|image|art/i.test(name)) {
                         child.material.emissive = new THREE.Color(0x000000);
                         child.material.roughness = 1.0;
@@ -117,7 +123,7 @@ export class World {
             if (name.includes('drawer')) {
                 // In ra tên gốc để debug xem tên chính xác là gì
                 console.log(`[World Debug] Đã tìm thấy tủ: ${child.name} (isMesh: ${child.isMesh})`);
-                
+
                 this.interactableObjects.push(child);
                 child.userData.isDrawer = true;
                 child.userData.isOpen = false;
@@ -140,15 +146,21 @@ export class World {
                 child.getWorldPosition(pos);
 
                 const isWorkLight = ['light1', 'light2', 'light3', 'light5', 'light6'].includes(child.name);
-                const intensity = isWorkLight ? 18 * this.scaleFactor : 35 * this.scaleFactor;
+                // --- TỰ CHỈNH CƯỜNG ĐỘ ĐÈN Ở ĐÂY ---
+                let intensityMultiplier = isWorkLight ? 1.5 : 5.0;
+                if (child.name === 'light1' || child.name === 'light2') {
+                    intensityMultiplier = 1.0; // Tăng số này nếu thấy đèn 1, 2 bị tối quá
+                }
+
+                const intensity = intensityMultiplier * this.scaleFactor;
 
                 const spotLight = new THREE.SpotLight(
                     0xfff5e0,
                     intensity,
                     20 * this.scaleFactor,
                     isWorkLight ? Math.PI / 4.5 : Math.PI / 3.5,
-                    0.8,
-                    1.5
+                    1.0, // Penumbra tối đa để cạnh đèn mềm mại
+                    2.0  // Decay chuẩn vật lý để ánh sáng tản đều
                 );
                 spotLight.position.copy(pos);
 
