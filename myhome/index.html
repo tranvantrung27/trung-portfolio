@@ -249,7 +249,16 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 100;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            mix-blend-mode: difference;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+        }
+
+        #crosshair.active {
+            width: 14px;
+            height: 14px;
+            background: transparent;
+            border: 2px solid white;
         }
 
         #interact-prompt {
@@ -330,6 +339,114 @@
             color: black;
             transform: scale(1.1);
         }
+
+        /* --- Robot Dialogue UI --- */
+        #robot-dialogue {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px 40px;
+            border-radius: 20px;
+            color: white;
+            z-index: 1200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        #robot-dialogue.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .dialogue-header {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--primary);
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            font-weight: 900;
+        }
+
+        .dialogue-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Voice Chat UI --- */
+        #voice-chat-ui {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            pointer-events: none;
+            z-index: 1100;
+        }
+
+        .voice-key-hint {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.8;
+        }
+
+        #voice-status-bubble {
+            background: var(--primary);
+            color: black;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px var(--primary);
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Audio Indicator */
+        #audio-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+            z-index: 4000;
+            transition: all 0.3s ease;
+        }
+        #audio-indicator.on {
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+        }
     </style>
 </head>
 
@@ -369,10 +486,32 @@
     <div id="crosshair"></div>
     <div id="interact-prompt">Nhấn [E] để tương tác</div>
 
+    <!-- Robot Dialogue Container -->
+    <div id="robot-dialogue">
+        <div class="dialogue-header">AI Assistant</div>
+        <div class="dialogue-text" id="dialogue-text">...</div>
+    </div>
+
+    <!-- AI Debug Log Overlay (Ẩn vì đã xong giai đoạn debug) -->
+    <div id="ai-log" style="display: none; position: fixed; bottom: 20px; left: 20px; font-family: 'Courier New', monospace; font-size: 13px; color: #00ff88; pointer-events: none; z-index: 3000; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 1px solid rgba(0,255,136,0.3); min-width: 320px;">
+        <div style="font-size: 10px; color: #666; margin-bottom: 5px; text-transform: uppercase;">Trung Robot AI - Stream Log</div>
+        <div id="ai-log-content"></div>
+    </div>
+
+    <!-- Voice Chat UI -->
+    <div id="voice-chat-ui">
+        <div id="voice-status-bubble">🎤 ĐANG NGHE...</div>
+    </div>
+
+    <!-- Hidden Audio System -->
+    <audio id="robot-audio" style="display:none;"></audio>
+
     <a href="../" class="back-btn-ui" title="Quay lại Portfolio">←</a>
 
+    <div id="audio-indicator" title="Audio Status: Red = Suspended, Green = Ready"></div>
+
     <script type="module">
-        import { App } from './js/App.js';
+        import { App } from './js/core/App.js';
         const app = new App();
         window.homeApp = app; 
     </script>
