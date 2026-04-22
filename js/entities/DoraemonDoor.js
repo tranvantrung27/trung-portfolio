@@ -16,11 +16,11 @@ export class DoraemonDoor {
     this.doorLeafGroup = null;
 
     // SFX Assets
-    this.ambientSound = new Audio('assets/sounds/prop.mp3');
+    this.ambientSound = new Audio(import.meta.env.BASE_URL + 'assets/sounds/prop.mp3');
     this.ambientSound.loop = false;
     this.ambientSound.volume = 0.4;
 
-    this.whooshSound = new Audio('assets/sounds/magic whoosh.mp3');
+    this.whooshSound = new Audio(import.meta.env.BASE_URL + 'assets/sounds/magic whoosh.mp3');
     this.whooshSound.volume = 0.5;
 
     /**

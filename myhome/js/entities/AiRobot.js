@@ -16,7 +16,7 @@ export class AiRobot {
 
     load() {
         try {
-            this.world.loader.load('../assets/models/home/ai_robot.glb', (gltf) => {
+            this.world.loader.load(import.meta.env.BASE_URL + 'assets/models/home/ai_robot.glb', (gltf) => {
                 const robot = gltf.scene;
                 this.robotMesh = robot;
 
