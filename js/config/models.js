@@ -15,6 +15,6 @@ export const MODELS = {
     SNAKE:          './assets/models/snake.glb',
   },
   DECORATION: {
-    DORAEMON_DOOR: '/assets/models/doraemon_door.glb',
+    DORAEMON_DOOR: 'assets/models/doraemon_door.glb',
   }
 };

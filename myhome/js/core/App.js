@@ -64,7 +64,7 @@ export class App {
 
         // --- 4. Loading ---
         try {
-            const worldData = await this.world.load('/assets/models/home/myhome.glb');
+            const worldData = await this.world.load('../assets/models/home/myhome.glb');
             this.player.setupPhysics();
             
             // Spawn vị trí ban đầu

@@ -38,7 +38,7 @@ export class Player {
         const listener = new THREE.AudioListener();
         this.camera.add(listener);
         this.footstepSound = new THREE.Audio(listener);
-        new THREE.AudioLoader().load('/assets/sounds/walk.mp3', (buffer) => {
+        new THREE.AudioLoader().load('../assets/sounds/walk.mp3', (buffer) => {
             this.footstepSound.setBuffer(buffer);
             this.footstepSound.setLoop(false);
             this.footstepSound.setVolume(0.1);

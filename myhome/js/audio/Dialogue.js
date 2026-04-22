@@ -54,121 +54,121 @@ export class Dialogue {
     //     }, 5000);
     // }
 
-// Dừng tất cả âm thanh
-stopAudio() {
-    if (this.pollTimeout) {
-        clearTimeout(this.pollTimeout);
-        this.pollTimeout = null;
-    }
-    if (this.audioElement) {
-        this.audioElement.pause();
-        this.audioElement.currentTime = 0;
-        // Purge buffer using silent data URI to maintain element readiness
-        this.audioElement.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
-    }
-    window.speechSynthesis.cancel();
-}
-
-say(message, duration = 4000, shouldSpeak = true) {
-    return; // TẠM ẨN ĐỂ PUSH GIT
-    if (!this.container || !this.textElement) return;
-
-    if (this.timeout) {
-        clearTimeout(this.timeout);
-    }
-
-    this.textElement.innerText = message;
-    this.container.classList.add('active');
-
-    if (shouldSpeak) {
-        if (this.useFPT) {
-            this.speakFPT(message);
-        } else {
-            this.speak(message);
+    // Dừng tất cả âm thanh
+    stopAudio() {
+        if (this.pollTimeout) {
+            clearTimeout(this.pollTimeout);
+            this.pollTimeout = null;
         }
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement.currentTime = 0;
+            // Purge buffer using silent data URI to maintain element readiness
+            this.audioElement.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+        }
+        window.speechSynthesis.cancel();
     }
 
-    this.timeout = setTimeout(() => {
-        this.container.classList.remove('active');
-        this.timeout = null;
-    }, duration);
-}
+    say(message, duration = 4000, shouldSpeak = true) {
+        return; // TẠM ẨN ĐỂ PUSH GIT
+        if (!this.container || !this.textElement) return;
 
-// --- PHƯƠNG THỨC 1: HỆ THỐNG MẶC ĐỊNH ---
-speak(text) {
-    if (!('speechSynthesis' in window)) return;
-    this.stopAudio();
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'vi-VN';
+        this.textElement.innerText = message;
+        this.container.classList.add('active');
 
-    const voices = window.speechSynthesis.getVoices();
-    const viVoice = voices.find(v => v.lang.toLowerCase().includes('vi'));
-    if (viVoice) utterance.voice = viVoice;
+        if (shouldSpeak) {
+            if (this.useFPT) {
+                this.speakFPT(message);
+            } else {
+                this.speak(message);
+            }
+        }
 
-    window.speechSynthesis.speak(utterance);
-}
+        this.timeout = setTimeout(() => {
+            this.container.classList.remove('active');
+            this.timeout = null;
+        }, duration);
+    }
+
+    // --- PHƯƠNG THỨC 1: HỆ THỐNG MẶC ĐỊNH ---
+    speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        this.stopAudio();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'vi-VN';
+
+        const voices = window.speechSynthesis.getVoices();
+        const viVoice = voices.find(v => v.lang.toLowerCase().includes('vi'));
+        if (viVoice) utterance.voice = viVoice;
+
+        window.speechSynthesis.speak(utterance);
+    }
 
     // --- PHƯƠNG THỨC 2: FPT.AI (Mặc định với Polling) ---
     async speakFPT(text) {
-    if (!this.fptKey || !this.audioElement) return;
+        if (!this.fptKey || !this.audioElement) return;
 
-    try {
-        this.stopAudio();
+        try {
+            this.stopAudio();
 
-        const response = await fetch('https://api.fpt.ai/hmi/tts/v5', {
-            method: 'POST',
-            headers: {
-                'api-key': this.fptKey,
-                'voice': this.fptVoice,
-                'speed': ''
-            },
-            body: text
-        });
+            const response = await fetch('https://api.fpt.ai/hmi/tts/v5', {
+                method: 'POST',
+                headers: {
+                    'api-key': this.fptKey,
+                    'voice': this.fptVoice,
+                    'speed': ''
+                },
+                body: text
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (data.async) {
-            const audioUrl = data.async;
-            let attempts = 0;
-            const maxAttempts = 15;
-            const originalText = this.textElement.innerText;
+            if (data.async) {
+                const audioUrl = data.async;
+                let attempts = 0;
+                const maxAttempts = 15;
+                const originalText = this.textElement.innerText;
 
-            const pollAndPlay = () => {
-                attempts++;
+                const pollAndPlay = () => {
+                    attempts++;
 
-                this.audioElement.oncanplay = null;
-                this.audioElement.onerror = null;
-                this.audioElement.src = audioUrl;
+                    this.audioElement.oncanplay = null;
+                    this.audioElement.onerror = null;
+                    this.audioElement.src = audioUrl;
 
-                this.audioElement.oncanplay = () => {
-                    this.pollTimeout = null;
-                    this.textElement.innerText = originalText;
-                    this.audioElement.play().catch(e => {
-                        console.warn("[FPT] Play blocked, falling back to TTS");
-                        this.speak(text);
-                    });
-                };
-
-                this.audioElement.onerror = () => {
-                    if (attempts < maxAttempts) {
-                        this.pollTimeout = setTimeout(pollAndPlay, 1000);
-                    } else {
+                    this.audioElement.oncanplay = () => {
                         this.pollTimeout = null;
                         this.textElement.innerText = originalText;
-                        this.speak(text);
-                    }
+                        this.audioElement.play().catch(e => {
+                            console.warn("[FPT] Play blocked, falling back to TTS");
+                            this.speak(text);
+                        });
+                    };
+
+                    this.audioElement.onerror = () => {
+                        if (attempts < maxAttempts) {
+                            this.pollTimeout = setTimeout(pollAndPlay, 1000);
+                        } else {
+                            this.pollTimeout = null;
+                            this.textElement.innerText = originalText;
+                            this.speak(text);
+                        }
+                    };
+
+                    this.audioElement.load();
                 };
 
-                this.audioElement.load();
-            };
-
-            pollAndPlay();
-        } else {
+                pollAndPlay();
+            } else {
+                this.speak(text);
+            }
+        } catch (e) {
             this.speak(text);
         }
-    } catch (e) {
-        this.speak(text);
     }
-}
 }

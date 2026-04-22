@@ -112,7 +112,7 @@ export class ViewManager {
         // LAZY LOAD if not ready
         if (!this.app.doraemonDoor.isLoaded && !this.app.doraemonDoor.isLoading) {
             console.log('[ViewManager] Door not loaded. Triggering lazy load...');
-            const MODELS = { DECORATION: { DORAEMON_DOOR: '/assets/models/doraemon_door.glb' } };
+            const MODELS = { DECORATION: { DORAEMON_DOOR: 'assets/models/doraemon_door.glb' } };
             
             // Temporary simple loader text
             const loaderDiv = document.createElement('div');
