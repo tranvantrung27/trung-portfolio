@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
+import { SOUNDS } from '../../../js/managers/SoundManager.js';
 
 export class Interactions {
     constructor(camera, scene, world, player, outlinePass, aiRobot) {
@@ -14,6 +15,14 @@ export class Interactions {
         this.interactObject = null;
         this.isSitting = false;
         this.sittingChair = null;
+
+        // Audio
+        this.audioDrawerOpen = new Audio(SOUNDS.SFX.DRAWER_OPEN);
+        this.audioDrawerClose = new Audio(SOUNDS.SFX.DRAWER_CLOSE);
+        this.audioDrawerOpen.volume = 0.4;
+        this.audioDrawerClose.volume = 0.4;
+        this.audioDrawerOpen.playbackRate = 2;
+        this.audioDrawerClose.playbackRate = 2;
 
         this.prompt = document.getElementById('interact-prompt');
         this.crosshair = document.getElementById('crosshair');
@@ -42,8 +51,16 @@ export class Interactions {
                 this.toggleDrawer(this.interactObject);
             } else if (this.interactObject.userData.isRobot) {
                 this.aiRobot.say("Chào bro! Rất vui được gặp ông. (Giữ phím V để trò chuyện trực tiếp với Mon nhé!)", 6000);
+            } else if (this.interactObject.userData.isDoor) {
+                this.leaveHouse();
             }
         }
+    }
+
+    leaveHouse() {
+        // Redirection logic to go back to the main portfolio
+        console.log("[Interaction] Rời nhà...");
+        window.location.href = '../';
     }
 
     toggleDrawer(drawer) {
@@ -51,6 +68,15 @@ export class Interactions {
 
         drawer.userData.isAnimating = true;
         drawer.userData.isOpen = !drawer.userData.isOpen;
+
+        // Play Sound
+        if (drawer.userData.isOpen) {
+            this.audioDrawerOpen.currentTime = 0;
+            this.audioDrawerOpen.play().catch(e => console.warn("Audio play blocked:", e));
+        } else {
+            this.audioDrawerClose.currentTime = 0;
+            this.audioDrawerClose.play().catch(e => console.warn("Audio play blocked:", e));
+        }
 
         console.log(`[Interaction] Tủ đang kéo là: ${drawer.name}`);
 
@@ -78,8 +104,8 @@ export class Interactions {
             x: targetPos.x,
             y: targetPos.y,
             z: targetPos.z,
-            duration: 0.4,
-            ease: "power2.out",
+            duration: 0.7, // Tăng thời gian chạy (0.4 -> 0.7) để khớp với âm thanh chậm
+            ease: "power2.inOut", // Đổi qua inOut cho nó mượt hơn khi kéo đồ nặng
             onComplete: () => {
                 drawer.userData.isAnimating = false;
             }
@@ -168,17 +194,19 @@ export class Interactions {
                 // console.log("Raycaster Hit Tường/Mặt ngoài ban đầu là:", hitObj.name);
 
                 // CÁCH 1 (CHUẨN NHẤT): Leo lên parent đúng cách
-                while (hitObj && 
-                       !hitObj.name.toLowerCase().includes('drawer') && 
-                       !hitObj.name.toLowerCase().includes('char1') &&
-                       !hitObj.userData.isRobot) {
+                while (hitObj &&
+                    !hitObj.name.toLowerCase().includes('drawer') &&
+                    !hitObj.name.toLowerCase().includes('char1') &&
+                    !hitObj.name.toLowerCase().includes('door') &&
+                    !hitObj.userData.isDoor &&
+                    !hitObj.userData.isRobot) {
                     hitObj = hitObj.parent;
                 }
 
                 if (hitObj) {
                     this.interactObject = hitObj;
                     selectedForOutline = [hitObj];
-                    this.outlinePass.visibleEdgeColor.set(0x00ff88); 
+                    this.outlinePass.visibleEdgeColor.set(0x00ff88);
 
                     if (this.prompt) {
                         this.prompt.style.display = 'flex';
@@ -189,6 +217,8 @@ export class Interactions {
                             this.prompt.innerHTML = `<span class="prompt-key">E</span> để ${hitObj.userData.isOpen ? 'đóng' : 'mở'} tủ`;
                         } else if (hitObj.userData.isRobot) {
                             this.prompt.innerHTML = `Nhấn <span class="prompt-key">E</span> để trò chuyện`;
+                        } else if (hitObj.userData.isDoor) {
+                            this.prompt.innerHTML = `Nhấn <span class="prompt-key">E</span> để rời nhà`;
                         } else {
                             this.prompt.innerHTML = `Nhấn <span class="prompt-key">E</span> để tương tác`;
                         }

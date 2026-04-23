@@ -129,6 +129,12 @@ export class World {
                 child.userData.isOpen = false;
             }
 
+            if (name.includes('door')) {
+                console.log(`[World Debug] Đã tìm thấy cửa: ${child.name}`);
+                this.interactableObjects.push(child);
+                child.userData.isDoor = true;
+            }
+
             if (name.includes('seat_point')) this.seatPoint = child;
             if (name.includes('stand_point')) this.standPoint = child;
 
