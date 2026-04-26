@@ -1,300 +1,120 @@
 import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { gsap } from 'gsap';
+import { CONFIG } from '../config/Config.js';
+import { Events } from './EventManager.js';
+import { Engine } from './Engine.js';
+import { ResourceManager } from './ResourceManager.js';
+import { EntityManager } from './EntityManager.js';
 
 import { World } from './World.js';
 import { Player } from './Player.js';
-import { Interactions } from '../systems/Interactions.js';
 import { AiRobot } from '../entities/AiRobot.js';
-import { Brain } from '../ai/Brain.js';
-import { VoiceListener } from '../ai/VoiceListener.js';
+import { Computer } from '../systems/Computer.js';
+import { InteractionSystem } from '../systems/InteractionSystem.js';
+import { UIManager } from '../systems/UIManager.js';
 
 export class App {
     constructor() {
-        this.renderer = null;
-        this.camera = null;
-        this.scene = null;
-        this.composer = null;
+        this.engine = new Engine();
+        this.resources = new ResourceManager();
+        this.ui = new UIManager();
         this.clock = new THREE.Clock();
-        this.robotMixer = null;
-
-        this.world = null;
-        this.player = null;
-        this.interactions = null;
-        this.aiRobot = null;
-        this.brain = null;
-        this.voiceListener = null;
-        this.isRunning = true;
+        this.isRunning = false;
 
         this.init();
     }
 
     async init() {
-        // --- 1. Scene Setup ---
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x050505);
-
-        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
-        this.camera.rotation.order = 'YXZ';
-
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        // --- CHỈNH ĐỘ SÁNG TỔNG THỂ CỦA TOÀN BỘ CĂN PHÒNG ---
-        this.renderer.toneMappingExposure = 1.0; // Mặc định: 1.0. Giảm xuống nếu thấy chói quá.
-        document.body.appendChild(this.renderer.domElement);
-
-        // --- 2. Environment (RoomEnvironment cho phản chiếu kim loại đẹp) ---
-        const environment = new RoomEnvironment(this.renderer);
-        const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
-        this.scene.environment = pmremGenerator.fromScene(environment).texture;
-
-        // --- 3. Modules ---
-        this.world = new World(this.scene);
-        this.player = new Player(this.camera, this.renderer.domElement, this.world);
-        this.aiRobot = new AiRobot(this.scene, this.world, this.camera);
-        this.brain = new Brain();
-        // this.setupVoiceChat(); // TẠM ẨN ĐỂ PUSH GIT
-
-        // --- 4. Loading ---
         try {
-            const worldData = await this.world.load(import.meta.env.BASE_URL + 'assets/models/home/home.glb');
-            this.player.setupPhysics();
+            // 1. Load Resources
+            const modelUrl = import.meta.env.BASE_URL + CONFIG.PATHS.MODELS;
+            const robotUrl = import.meta.env.BASE_URL + 'assets/models/home/ai_robot.glb';
+            
+            await Promise.all([
+                this.resources.loadModel('world', modelUrl),
+                this.resources.loadModel('robot', robotUrl)
+            ]);
 
-            // Spawn vị trí ban đầu
+            // 2. Setup Core World
+            this.world = new World(this.engine.scene);
+            const worldData = await this.world.init(this.resources.get('world'));
+
+            // 3. Setup Entities & Systems
+            this.entities = new EntityManager(this.engine.scene, this.world);
+            
+            this.player = this.entities.add(new Player(this.engine.camera, this.engine.renderer.domElement, this.world));
+            await this.player.init(this.resources);
+
+            this.aiRobot = this.entities.add(new AiRobot(this.engine.scene, this.world, this.engine.camera));
+            await this.aiRobot.init(this.resources);
+
+            // 4. Set Initial Position FIRST (so robot can look at player)
             this.player.controls.getObject().position.copy(worldData.spawnInfo.position);
-            this.camera.lookAt(worldData.spawnInfo.lookAt);
+            this.engine.camera.lookAt(worldData.spawnInfo.lookAt);
+            this.aiRobot.setupSpawnPosition(); // Recalculate rotation to look at player
 
-            // Load Robot sau khi world đã xong
-            this.aiRobot.load();
+            // 5. Initialize Computer Screen
+            const computerTarget = this.world.computerScreenTarget || this.world.screenAnchor || this.world.pcTarget;
+            if (computerTarget) {
+                this.computer = this.entities.add(new Computer(this.engine.scene, computerTarget, this.world));
+                await this.computer.init();
+            }
 
-            // --- 5. Post Processing ---
-            this.setupPostProcessing();
+            this.interactions = new InteractionSystem(this.engine, this.world, this.player, this.entities);
 
-            this.interactions = new Interactions(
-                this.camera,
-                this.scene,
-                this.world,
-                this.player,
-                this.outlinePass,
-                this.aiRobot
-            );
+            // 6. Global Event Listeners
+            this.setupEvents();
 
-            this.setupUI();
+            this.isRunning = true;
             this.animate();
 
         } catch (e) {
             console.error('[App] Init Error:', e);
         }
-
-        window.addEventListener('resize', () => this.onWindowResize());
     }
 
-    setupPostProcessing() {
-        this.composer = new EffectComposer(this.renderer);
-        this.composer.addPass(new RenderPass(this.scene, this.camera));
-
-        // Đẩy threshold cực cao (0.95) để triệt tiêu việc "chói" trên diện rộng
-        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.3, 0.5, 0.82);
-        bloom.threshold = 0.95;
-        this.composer.addPass(bloom);
-
-        this.outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), this.scene, this.camera);
-        this.outlinePass.edgeStrength = 4.0;
-        this.outlinePass.edgeGlow = 1.0;
-        this.outlinePass.edgeThickness = 1.0;
-        this.outlinePass.visibleEdgeColor.set(0x00ff88);
-        this.outlinePass.hiddenEdgeColor.set(0x000000);
-        this.composer.addPass(this.outlinePass);
-
-        this.composer.addPass(new OutputPass());
+    setupEvents() {
+        Events.on('UI_START_CLICKED', () => this.startExperience());
+        Events.on('PLAYER_LOCKED', () => {
+            this.ui.showOverlay(false);
+            this.ui.setCrosshair(true);
+        });
+        Events.on('PLAYER_UNLOCKED', () => {
+            this.ui.showOverlay(true);
+            this.ui.setCrosshair(false);
+        });
+        Events.on('UPDATE_PROMPT', (html) => this.ui.setPrompt(html));
+        Events.on('ROBOT_INTERACTED', () => {
+            this.aiRobot.say("Chào bro! Rất vui được gặp ông. (Giữ phím V để trò chuyện trực tiếp với Mon nhé!)", 6000);
+        });
     }
 
-    setupUI() {
-        const overlay = document.getElementById('overlay');
-        const startButton = document.getElementById('start-button');
-        if (!overlay || !startButton) return;
+    startExperience() {
+        if (this.aiRobot && this.aiRobot.dialogue) this.aiRobot.dialogue.unlock();
+        
+        const audioCtx = THREE.AudioContext.getContext();
+        if (audioCtx.state !== 'running') audioCtx.resume();
 
-        overlay.style.display = 'flex';
-
-        // Staggered Entrance Animation
-        const tl = gsap.timeline({ delay: 0.5 });
-        tl.to('.welcome-title', { opacity: 1, y: 0, duration: 1.2, ease: 'expo.out' })
-            .to('.controls-grid', { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }, '-=0.8')
-            .to('#start-button', { opacity: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)' }, '-=0.6');
-
-        startButton.addEventListener('click', () => {
-            // Mở khóa âm thanh mỗi khi nhấn (để làm mới quyền của trình duyệt)
-            if (this.aiRobot && this.aiRobot.dialogue) {
-                this.aiRobot.dialogue.unlock();
-            }
-
-            // Luôn cố gắng resume AudioContext
-            const audioCtx = THREE.AudioContext.getContext();
-            if (audioCtx.state !== 'running') {
-                audioCtx.resume().then(() => {
-                    console.log("[App] AudioContext resumed successfully.");
-                });
-            }
-
-            if (this.player && this.player.controls) {
-                this.player.controls.lock();
-            }
-            gsap.to(overlay, { opacity: 0, duration: 0.5, onComplete: () => overlay.style.display = 'none' });
-            const crosshair = document.getElementById('crosshair');
-            if (crosshair) crosshair.style.display = 'block';
-        });
-
-        const crosshair = document.getElementById('crosshair');
-
-        this.player.controls.addEventListener('lock', () => {
-            gsap.to(overlay, {
-                opacity: 0,
-                duration: 0.8,
-                onComplete: () => overlay.style.display = 'none'
-            });
-            if (crosshair) crosshair.style.display = 'block';
-        });
-
-        this.player.controls.addEventListener('unlock', () => {
-            overlay.style.display = 'flex';
-            gsap.to(overlay, { opacity: 1, duration: 0.5 });
-            if (crosshair) crosshair.style.display = 'none';
-        });
-
-        // Listen for Key V (TẠM ẨN ĐỂ PUSH GIT)
-        /*
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyV' && !e.repeat) {
-                // 1. Dừng ngay lập tức âm thanh đang phát để tránh xung đột phần cứng
-                if (this.aiRobot && this.aiRobot.dialogue) {
-                    this.aiRobot.dialogue.stopAudio();
-                }
-                
-                // 2. Nghỉ 50ms để phần cứng ổn định rồi mới bật Mic
-                setTimeout(() => {
-                    this.voiceListener.start();
-                }, 50);
-            }
-            // MỚI: Phím T để kiểm tra âm thanh
-            if (e.code === 'KeyT' && this.aiRobot && this.aiRobot.dialogue) {
-                this.aiRobot.dialogue.testSound();
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyV') {
-                this.voiceListener.stop();
-            }
-        });
-        */
-    }
-
-    setupVoiceChat() {
-        const debugLog = document.getElementById('ai-log-content');
-        const statusBubble = document.getElementById('voice-status-bubble');
-
-        const log = (msg) => {
-            if (!debugLog) return;
-            const entry = document.createElement('div');
-            entry.textContent = `${new Date().toLocaleTimeString()} - ${msg}`;
-            debugLog.appendChild(entry);
-            debugLog.scrollTop = debugLog.scrollHeight;
-            if (debugLog.children.length > 20) debugLog.removeChild(debugLog.firstChild);
-        };
-
-        this.voiceListener = new VoiceListener(
-            // Start
-            () => {
-                if (statusBubble) statusBubble.style.display = 'block';
-                log("[Voice] Đang nghe...");
-            },
-            // Result (Gửi tới Brain)
-            async (text) => {
-                log(`[BẠN NÓI]: "${text}"`);
-
-                log("[AI BRAIN]: Đang gửi câu hỏi tới Groq...");
-                const answer = await this.brain.ask(text);
-                log(`[AI BRAIN]: Đã trả lời.`);
-
-                // Trả lời và tự động đọc (mặc định shouldSpeak = true)
-                this.aiRobot.say(answer);
-            },
-            // End
-            () => {
-                if (statusBubble) statusBubble.style.display = 'none';
-                log("[Voice] Dừng nghe.");
-            }
-        );
-    }
-
-    onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        if (this.composer) this.composer.setSize(window.innerWidth, window.innerHeight);
+        if (this.player && this.player.controls) this.player.controls.lock();
     }
 
     animate() {
         if (!this.isRunning) return;
         requestAnimationFrame(() => this.animate());
 
-        const delta = this.clock.getDelta();
-        if (this.world) this.world.update(delta);
-        if (this.player) this.player.update(delta);
-        if (this.aiRobot) this.aiRobot.update(delta);
-        if (this.interactions) this.interactions.update(this.world ? this.world.scaleFactor : 1);
-
-        this.updateAudioIndicator();
-        this.render();
-    }
-
-    updateAudioIndicator() {
-        const indicator = document.getElementById('audio-indicator');
-        if (indicator) {
-            const state = THREE.AudioContext.getContext().state;
-            if (state === 'running') {
-                indicator.classList.add('on');
-            } else {
-                indicator.classList.remove('on');
-            }
-        }
-    }
-
-    render() {
-        if (this.composer) {
-            this.composer.render();
-        } else {
-            this.renderer.render(this.scene, this.camera);
-        }
+        const delta = Math.min(this.clock.getDelta(), 0.1); // Cap delta to avoid physics glitches
+        
+        this.world.update(delta);
+        this.entities.update(delta);
+        this.interactions.update(delta, this.world.scaleFactor);
+        
+        this.ui.updateAudioState(THREE.AudioContext.getContext().state === 'running');
+        this.engine.render();
     }
 
     destroy() {
         this.isRunning = false;
-        if (this.voiceListener) this.voiceListener.stop();
-
-        const disposeObject = (obj) => {
-            if (obj.geometry) obj.geometry.dispose();
-            if (obj.material) {
-                if (Array.isArray(obj.material)) {
-                    obj.material.forEach(m => m.dispose());
-                } else {
-                    obj.material.dispose();
-                }
-            }
-        };
-        if (this.scene) this.scene.traverse(disposeObject);
-        if (this.renderer) this.renderer.dispose();
-        if (this.composer) this.composer.dispose();
-
-        console.log('[HomeApp] Destroyed.');
+        this.entities.dispose();
+        this.engine.dispose();
+        console.log('[App] Destroyed.');
     }
 }
