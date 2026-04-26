@@ -20,7 +20,7 @@ export class AiRobot extends BaseEntity {
         this.setupSpawnPosition();
         this.processMaterials();
         this.setupAnimations(gltf);
-        
+
         this.scene.add(this.mesh);
         this.isInitialized = true;
     }
@@ -37,11 +37,11 @@ export class AiRobot extends BaseEntity {
             const pos = new THREE.Vector3();
             spawnNode.getWorldPosition(pos);
             this.mesh.position.copy(pos);
-            
+
             // Robot nhìn về phía người chơi (giữ độ cao y của robot)
             const target = new THREE.Vector3(this.camera.position.x, this.mesh.position.y, this.camera.position.z);
             this.mesh.lookAt(target);
-            
+
             console.log(`[AiRobot] Spawned and rotated towards player`);
         }
     }
@@ -86,7 +86,7 @@ export class AiRobot extends BaseEntity {
         const canvas = document.createElement('canvas');
         canvas.width = 128; canvas.height = 128;
         const ctx = canvas.getContext('2d');
-        
+
         ctx.clearRect(0, 0, 128, 128);
         ctx.fillStyle = '#00ff88';
         ctx.strokeStyle = '#ffffff';
@@ -95,7 +95,7 @@ export class AiRobot extends BaseEntity {
         // Vẽ thân dấu chấm than
         const w = 24, h = 60;
         ctx.beginPath();
-        ctx.roundRect(64 - w/2, 15, w, h, 10);
+        ctx.roundRect(64 - w / 2, 15, w, h, 10);
         ctx.fill();
         ctx.stroke();
 
@@ -106,13 +106,13 @@ export class AiRobot extends BaseEntity {
         ctx.stroke();
 
         const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.SpriteMaterial({ 
-            map: texture, 
-            transparent: true, 
+        const material = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
             depthTest: false,
             depthWrite: false
         });
-        
+
         this.exclamationSprite = new THREE.Sprite(material);
         this.exclamationSprite.scale.set(0.2, 0.2, 1);
         this.mesh.add(this.exclamationSprite); // Gắn vào root của robot thay vì hiNode
@@ -133,18 +133,45 @@ export class AiRobot extends BaseEntity {
     update(delta) {
         if (!this.isInitialized) return;
         if (this.robotMixer) this.robotMixer.update(delta);
-        
+
+        const isSpeaking = this.dialogue && this.dialogue.container && this.dialogue.container.classList.contains('active');
+
+        // --- Xử lý dấu chấm than (!) ---
         if (this.exclamationSprite && this.hiNode) {
-            this.exclamationTime += delta;
-            
-            // Cập nhật vị trí theo hiNode nhưng không bị dính scale của nó
+            // Chỉ hiện dấu chấm than khi KHÔNG nói chuyện
+            this.exclamationSprite.visible = !isSpeaking;
+
+            if (this.exclamationSprite.visible) {
+                this.exclamationTime += delta;
+                const worldPos = new THREE.Vector3();
+                this.hiNode.getWorldPosition(worldPos);
+                this.exclamationSprite.position.copy(this.mesh.worldToLocal(worldPos));
+                this.exclamationSprite.position.y += 0.3;
+
+                const pulse = 1.0 + Math.sin(this.exclamationTime * 5) * 0.15;
+                this.exclamationSprite.scale.set(pulse * 0.2, pulse * 0.2, 1);
+            }
+        }
+
+        // --- Xử lý vị trí bong bóng thoại (Dialogue Bubble) ---
+        if (isSpeaking && this.hiNode) {
             const worldPos = new THREE.Vector3();
             this.hiNode.getWorldPosition(worldPos);
-            this.exclamationSprite.position.copy(this.mesh.worldToLocal(worldPos));
-            this.exclamationSprite.position.y += 0.3; // Offset lên trên một chút
+            worldPos.y -= -0.105; // Hạ thấp thêm nữa (trước là -0.1)
 
-            const pulse = 1.0 + Math.sin(this.exclamationTime * 5) * 0.15;
-            this.exclamationSprite.scale.set(pulse * 0.2, pulse * 0.2, 1);
+            const screenPos = worldPos.clone().project(this.camera);
+
+            // Kiểm tra xem robot có đang ở trong tầm nhìn của camera không (z < 1)
+            if (screenPos.z < 1) {
+                const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
+
+                this.dialogue.container.style.display = 'block';
+                this.dialogue.container.style.left = `${x}px`;
+                this.dialogue.container.style.top = `${y}px`;
+            } else {
+                this.dialogue.container.style.display = 'none';
+            }
         }
     }
 }

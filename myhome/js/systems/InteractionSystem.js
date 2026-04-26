@@ -31,9 +31,23 @@ export class InteractionSystem {
     }
 
     initListeners() {
+        this.voiceActive = false;
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyE') this.interactE();
             if (e.code === 'KeyF') this.interactF();
+            if (e.code === 'KeyV' && !e.repeat) {
+                this.voiceActive = !this.voiceActive;
+                if (this.voiceActive) Events.emit('VOICE_START');
+                else Events.emit('VOICE_STOP');
+            }
+        });
+
+        Events.on('VOICE_AUTO_STOP', () => {
+            this.voiceActive = false;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            // Đã chuyển sang chế độ bấm thả thông minh, không cần STOP ở keyup nữa
         });
 
         // Debug: Click chuột để xem tên vật thể

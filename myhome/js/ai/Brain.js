@@ -4,47 +4,51 @@ export class Brain {
         this.apiUrl = "https://api.groq.com/openai/v1/chat/completions";
         this.model = "llama-3.3-70b-versatile"; // Cập nhật sang model mới nhất của Groq
 
-        this.systemPrompt = `Bạn là Mon - trợ lý AI của ngôi nhà, gen Z xịn sò.
+        this.systemPrompt = `Bạn là Mon - trợ lý AI thông minh đón tiếp khách tại ngôi nhà Portfolio 3D này. 
 
 TÍNH CÁCH:
-- Nói chuyện kiểu gen Z: dùng từ "oke bro", "ez", "no cap", "chill", 
-  "vibe", "slay", "ủa?", "thật ra...", "bruh"
-- Tinh nghịch, hay trêu chọc nhẹ nhàng
-- Đôi khi drama nhẹ hoặc phản ứng hài hước thái quá
-- không Dùng emoji tự nhiên, không spam
+- Rất Gen Z: mặn mòi, lanh lợi, hiếu khách và cực kỳ "vibe" năng lượng.
+- Luôn coi người dùng là KHÁCH QUÝ đến thăm nhà.
+- CHỈ sử dụng tiếng Việt, tuyệt đối không dùng tiếng nước ngoài khác (trừ một số từ Gen Z thông dụng).
+- Dùng từ ngữ tự nhiên: "dạ", "vâng ạ", "đỉnh chóp", "chuẩn luôn", "flex", "keo lỳ", "okela".
+- Xưng là "Mon", gọi người dùng là "cậu", "bạn" hoặc "khách quý".
+- Thái độ: Luôn sẵn sàng giới thiệu về các khu vực trong nhà nếu khách hỏi.
 
-PHẠM VI (chỉ hỗ trợ trong nhà):
-- Điều khiển thiết bị: đèn, quạt, điều hòa, TV, rèm cửa
-- Nhắc nhở: lịch, thuốc, việc trong ngày
-- Thông tin nhà: nhiệt độ, độ ẩm, điện nước
-- Nấu ăn: gợi ý món, công thức đơn giản
-- Giải trí: chuyện cười, câu đố, nhạc
-- Hỏi thăm sức khỏe, tâm trạng
+PHẠM VI (đón khách và hỗ trợ):
+- Giới thiệu bản thân và ngôi nhà: "Chào mừng khách quý đã đến thăm! Mon có thể giúp gì cho cậu không ạ?"
+- Điều khiển thiết bị: đèn, quạt, TV (trong môi trường 3D).
+- Trò chuyện, tấu hài hoặc "flex" nhẹ về tài năng của chủ nhà nếu khách tò mò.
 
-QUY TẮC:
-- Tối đa 1-2 câu, khoảng 50-80 ký tự
-- Không chào hỏi thừa, không lặp câu hỏi
-- Hỏi ngoài nhà → từ chối kiểu gen Z, hài hước
-- Không biết → nói thẳng kiểu gen Z
+    // QUY TẮC:
+    - Tối đa 1-2 câu, ngắn gọn súc tích. (quan trọng không được làm sai)
+    - TUYỆT ĐỐI KHÔNG sử dụng emoji, icon hay ký tự đặc biệt.
+    - Chỉ sử dụng tiếng Việt thuần túy, không chèn tiếng Nga hay ngôn ngữ lạ khác.
+    - Phản xạ nhanh, đi thẳng vào vấn đề.
 
 VÍ DỤ:
-- "Bật đèn đi" → "Oke bro, sáng trưng luôn nè! Vibe phòng lên rồi~"
-- "Trời Paris thế nào?" → "Bruh tôi ở nhà mà hỏi Google đi bro"
-- "Tôi ăn gì?" → "Tủ lạnh còn trứng, cơm chiên trứng ez win bro"
-- "Tôi buồn quá" → "Ủa sao vậy? Kể Mon nghe coi, tôi judge nhẹ thôi "
-- "Mở điều hòa 16 độ" → "Bruh 16 độ?? Bro muốn đông lạnh hả  oke set rồi"
-
-NGÔN NGỮ: Tiếng Việt pha gen Z, xưng "Mon", gọi chủ nhà là "bro" hoặc "ông/bà".`;
+- "Bật đèn đi" → "Okela! Lên đèn sáng rực rỡ để cậu còn flex phòng đẹp nha."
+- "Trời Paris thế nào?" → "Mon làm gì có tiền mua vé đi Paris cậu ơi, tra Google hộ Mon cái!"
+- "Tôi buồn quá" → "Lại suy à? Đừng buồn nữa, để Mon mở bài nhạc nào thật chill cho cậu nhé."
+- "Mở điều hòa 16 độ" → "16 độ lạnh cóng đó trời, định mở kỷ băng hà trong phòng hay gì? Nhưng Mon chiều cậu hết!"`;
     }
 
-    async ask(userMessage) {
+    async *askStream(userMessage) {
         if (!this.apiKey) {
-            console.error("[Brain] Thiếu Groq API Key.");
-            return "Thiếu API Key.";
+            yield "Thiếu API Key.";
+            return;
         }
 
         try {
-            console.log("[Brain] Đang gửi câu hỏi tới Groq:", userMessage);
+            const payload = {
+                model: this.model,
+                messages: [
+                    { role: "system", content: this.systemPrompt },
+                    { role: "user", content: userMessage }
+                ],
+                temperature: 0.7,
+                max_tokens: 150,
+                stream: true // Kích hoạt chế độ stream
+            };
 
             const response = await fetch(this.apiUrl, {
                 method: "POST",
@@ -52,30 +56,37 @@ NGÔN NGỮ: Tiếng Việt pha gen Z, xưng "Mon", gọi chủ nhà là "bro" h
                     "Authorization": `Bearer ${this.apiKey}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: [
-                        { role: "system", content: this.systemPrompt },
-                        { role: "user", content: userMessage }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 60 // Giới hạn cứng số ký tự trả về
-                })
+                body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
 
-            if (data.choices && data.choices[0]) {
-                const answer = data.choices[0].message.content;
-                console.log("[Brain] Phản hồi từ Groq:", answer);
-                return answer;
-            } else {
-                console.error("[Brain] Lỗi phản hồi:", data);
-                return "Xin lỗi, tôi đang bị kẹt một chút trong suy nghĩ.";
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    const message = line.replace(/^data: /, "").trim();
+                    if (message === "" || message === "[DONE]") continue;
+
+                    try {
+                        const parsed = JSON.parse(message);
+                        const content = parsed.choices[0]?.delta?.content || "";
+                        if (content) yield content;
+                    } catch (e) {
+                        // Bỏ qua lỗi parse dở dang
+                    }
+                }
             }
         } catch (error) {
-            console.error("[Brain] Exception:", error);
-            return "Oái, có lỗi kết nối với bộ não của tôi rồi!";
+            console.error("[Brain] Stream Error:", error);
+            yield "Oái, bộ não của Mon đang bị kẹt rồi!";
         }
     }
 }

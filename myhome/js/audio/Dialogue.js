@@ -2,173 +2,157 @@ export class Dialogue {
     constructor() {
         this.container = document.getElementById('robot-dialogue');
         this.textElement = document.getElementById('dialogue-text');
-        this.audioElement = document.getElementById('robot-audio'); // Get persistent element
+        this.audioElement = document.getElementById('robot-audio');
         this.timeout = null;
 
-        // FPT.AI Config
-        this.fptKey = import.meta.env.VITE_FPT_API_KEY;
+        // Queue System
+        this.audioQueue = [];
+        this.isPlaying = false;
+        this.fullText = "";
+
+        // TTS Config
         this.pollTimeout = null;
-        this.useFPT = true;
-        this.fptVoice = "banmai";
+        this.useEdgeTTS = true;
+        this.edgeVoice = "vi-VN-HoaiMyNeural";
         this.wasUnlocked = false;
     }
 
     // "Mở khóa" âm thanh
     unlock() {
-        return; // TẠM ẨN 
         if (this.audioElement) {
             this.audioElement.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
             this.audioElement.play().then(() => {
                 this.wasUnlocked = true;
                 console.log("[Dialogue] System Unlocked");
-            }).catch(e => {
-                console.warn("[Dialogue] Tag Unlock failed (expected on re-clicks):", e);
-            });
+            }).catch(e => { });
         }
-
-        const silentUtterance = new SpeechSynthesisUtterance("Mon");
-        silentUtterance.volume = 0;
-        window.speechSynthesis.speak(silentUtterance);
     }
 
-    // testSound() {
-    //     this.stopAudio();
-    //     const msg = "🔊 Đang kiểm tra âm thanh... (Nếu không nghe thấy tiếng Beep, hãy kiểm tra loa máy tính)";
-    //     this.textElement.innerText = msg;
-    //     this.container.classList.add('active');
-    //
-    //     if (this.audioElement) {
-    //         this.audioElement.src = "https://www.soundjay.com/buttons/sounds/button-20.mp3";
-    //         this.audioElement.play().then(() => {
-    //             console.log("[Test] Sound played successfully");
-    //         }).catch(e => {
-    //             console.error("[Test] Play failed:", e);
-    //             this.speak("Hệ thống âm thanh đang bị chặn. Vui lòng click vào màn hình.");
-    //         });
-    //     }
-    //
-    //     setTimeout(() => {
-    //         if (this.textElement.innerText === msg) {
-    //             this.container.classList.remove('active');
-    //         }
-    //     }, 5000);
-    // }
-
-    // Dừng tất cả âm thanh
+    // Dừng tất cả
     stopAudio() {
-        if (this.pollTimeout) {
-            clearTimeout(this.pollTimeout);
-            this.pollTimeout = null;
-        }
+        this.audioQueue = [];
+        this.isPlaying = false;
+        this.fullText = "";
+
         if (this.audioElement) {
             this.audioElement.pause();
             this.audioElement.currentTime = 0;
-            // Purge buffer using silent data URI to maintain element readiness
             this.audioElement.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+        }
+        if (this.typeInterval) {
+            clearInterval(this.typeInterval);
+            this.typeInterval = null;
         }
         window.speechSynthesis.cancel();
     }
 
+    typeWriter(text, speed = 30) {
+        if (!this.textElement) return;
+
+        // Hiệu ứng đánh chữ nối tiếp vào fullText
+        let i = 0;
+        if (this.typeInterval) clearInterval(this.typeInterval);
+
+        this.typeInterval = setInterval(() => {
+            if (i < text.length) {
+                this.textElement.textContent += text.charAt(i);
+                i++;
+            } else {
+                clearInterval(this.typeInterval);
+                this.typeInterval = null;
+            }
+        }, speed);
+    }
+
     say(message, duration = 4000, shouldSpeak = true) {
-        return; // TẠM ẨN ĐỂ PUSH GIT
         if (!this.container || !this.textElement) return;
 
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-        }
-
-        this.textElement.innerText = message;
         this.container.classList.add('active');
 
+        // Cập nhật text hiển thị (tích lũy)
+        if (this.fullText === "") {
+            this.textElement.textContent = "";
+        }
+        this.typeWriter(message);
+        this.fullText += message;
+
         if (shouldSpeak) {
-            if (this.useFPT) {
-                this.speakFPT(message);
-            } else {
-                this.speak(message);
+            this.audioQueue.push(message);
+            if (!this.isPlaying) {
+                this.processQueue();
             }
         }
 
+        // Tự động ẩn sau khi ngừng nói một khoảng thời gian
+        if (this.timeout) clearTimeout(this.timeout);
         this.timeout = setTimeout(() => {
-            this.container.classList.remove('active');
-            this.timeout = null;
+            if (!this.isPlaying && this.audioQueue.length === 0) {
+                this.container.classList.remove('active');
+                this.fullText = "";
+            }
         }, duration);
     }
 
-    // --- PHƯƠNG THỨC 1: HỆ THỐNG MẶC ĐỊNH ---
-    speak(text) {
-        if (!('speechSynthesis' in window)) return;
-        this.stopAudio();
+    async processQueue() {
+        if (this.audioQueue.length === 0) {
+            this.isPlaying = false;
+            // Ẩn bong bóng thoại sau khi kết thúc chuỗi âm thanh (delay 3s để khách kịp đọc xong)
+            if (this.timeout) clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                if (!this.isPlaying && this.audioQueue.length === 0) {
+                    this.container.classList.remove('active');
+                    this.fullText = "";
+                }
+            }, 3000);
+            return;
+        }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'vi-VN';
-
-        const voices = window.speechSynthesis.getVoices();
-        const viVoice = voices.find(v => v.lang.toLowerCase().includes('vi'));
-        if (viVoice) utterance.voice = viVoice;
-
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // --- PHƯƠNG THỨC 2: FPT.AI (Mặc định với Polling) ---
-    async speakFPT(text) {
-        if (!this.fptKey || !this.audioElement) return;
+        this.isPlaying = true;
+        const text = this.audioQueue.shift();
 
         try {
-            this.stopAudio();
-
-            const response = await fetch('https://api.fpt.ai/hmi/tts/v5', {
-                method: 'POST',
-                headers: {
-                    'api-key': this.fptKey,
-                    'voice': this.fptVoice,
-                    'speed': ''
-                },
-                body: text
-            });
-
-            const data = await response.json();
-
-            if (data.async) {
-                const audioUrl = data.async;
-                let attempts = 0;
-                const maxAttempts = 15;
-                const originalText = this.textElement.innerText;
-
-                const pollAndPlay = () => {
-                    attempts++;
-
-                    this.audioElement.oncanplay = null;
-                    this.audioElement.onerror = null;
-                    this.audioElement.src = audioUrl;
-
-                    this.audioElement.oncanplay = () => {
-                        this.pollTimeout = null;
-                        this.textElement.innerText = originalText;
-                        this.audioElement.play().catch(e => {
-                            console.warn("[FPT] Play blocked, falling back to TTS");
-                            this.speak(text);
-                        });
-                    };
-
-                    this.audioElement.onerror = () => {
-                        if (attempts < maxAttempts) {
-                            this.pollTimeout = setTimeout(pollAndPlay, 1000);
-                        } else {
-                            this.pollTimeout = null;
-                            this.textElement.innerText = originalText;
-                            this.speak(text);
-                        }
-                    };
-
-                    this.audioElement.load();
-                };
-
-                pollAndPlay();
-            } else {
-                this.speak(text);
-            }
+            await this.speakEdge(text);
         } catch (e) {
-            this.speak(text);
+            console.error("[Dialogue] Queue Error:", e);
         }
+
+        this.processQueue();
     }
+
+    async speakEdge(text) {
+        return new Promise(async (resolve) => {
+            if (!this.audioElement) return resolve();
+
+            try {
+                const cleanText = text
+                    .replace(/[^\p{L}\p{N}\s.,!?]/gu, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (!cleanText) return resolve();
+
+                // Proxy đã tự động xử lý Fallback (Edge -> Google)
+                const url = `/api/tts?text=${encodeURIComponent(cleanText)}&voice=${this.edgeVoice}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("TTS Proxy Error");
+
+                const blob = await res.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                
+                this.audioElement.src = audioUrl;
+                this.audioElement.onended = () => { resolve(); URL.revokeObjectURL(audioUrl); };
+                this.audioElement.onerror = () => {
+                    console.warn("[Audio] Error playing TTS");
+                    resolve();
+                };
+                await this.audioElement.play();
+
+            } catch (e) {
+                console.warn("[Dialogue] Remote TTS Failed:", e);
+                resolve(); // Không dùng Native Fallback nữa để giữ tính nhất quán
+            }
+        });
+    }
+
+    // Đã loại bỏ speakNative để đảm bảo chỉ dùng 1 loại giọng nói duy nhất
 }
